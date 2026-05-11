@@ -70,7 +70,7 @@ npm run dev
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_KEY=your-anon-key
+VITE_SUPABASE_KEY=your-public-key
 VITE_ADMIN_PASSWORD=your-admin-password
 VITE_SECURITY_ANSWER=your-security-answer
 ```
