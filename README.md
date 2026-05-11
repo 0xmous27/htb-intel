@@ -1,114 +1,86 @@
-# HTB Command Intelligence Platform
+# HTB Intel Platform
 
-> A local/hosted web application for penetration testers — built by [0xmous7](https://github.com/0xmous27)
+> A hacker-themed pentest intelligence platform — built by [0xmous27](https://github.com/0xmous27)
 
+[![Live](https://img.shields.io/badge/live-htb--intel.vercel.app-00ff99?style=flat-square)](https://htb-intel.vercel.app)
 ![License](https://img.shields.io/badge/license-MIT-00ff99?style=flat-square)
-![Made for](https://img.shields.io/badge/made%20for-HTB%20CPTS-red?style=flat-square)
-![Stack](https://img.shields.io/badge/stack-React%20%2B%20FastAPI-00ccff?style=flat-square)
+![Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20Supabase-00ccff?style=flat-square)
+![Made for](https://img.shields.io/badge/made%20for-HTB%20%2F%20CPTS%20%2F%20Bug%20Bounty-red?style=flat-square)
 
 ---
 
 ## What is this?
 
-A hacker-themed command intelligence platform that gives you instant access to:
+A cyberpunk-themed web platform giving instant access to pentest references, tools, and techniques — all in one place. Built for HTB, CPTS, and bug bounty hunters.
 
-- **172+ curated pentest techniques** with live variable injection (`{TARGET_IP}`, `{USERNAME}`, etc.)
-- **GTFOBins / LOLBAS** reference (Linux + Windows privilege escalation binaries)
-- **CVE quick reference** — top exploits with one-liner commands
-- **Out-of-band techniques** — blind SQLi, XXE, SSRF, CMDi
-- **Payload generator** — reverse shells + msfvenom for all platforms
-- **Hash identifier** — paste hash → get hashcat mode instantly
-- **Services reference** — 35 services with attack vectors and CVEs
-- **Evasion techniques** — WAF bypass, AMSI bypass, obfuscation
-- **CPTS exam guide** — strategy, checklists, tips
-- **Credentials vault** — store found creds, inject into commands
-- **Loot tracker** — track flags, hashes, files per host
-- **Notes** — scratch pad with auto-save
-- **Checklists** — methodology checklists for 5 engagement types
-- **Mini games** — Hack Game (terminal missions) + Catch Me (escape login)
+**Live at → [htb-intel.vercel.app](https://htb-intel.vercel.app)**
 
 ---
 
-## Screenshots
+## Features
 
-> Matrix rain background · Neon hacker theme · CRT scanline effect
+| Tab | Description |
+|---|---|
+| ⚡ TECHNIQUES | 172+ curated attack techniques with live `{TARGET_IP}` injection |
+| 🔧 TOOLS | Common pentest tools with install + usage commands |
+| 🌐 SERVICES | 35+ services with attack vectors, CVEs, and enum commands |
+| 📡 OOB | Out-of-band payloads — blind SQLi, XXE, SSRF, CMDi |
+| ⌥ REGEX | grep / sed / awk / python regex reference |
+| 💉 PAYLOADS | Reverse shells + msfvenom for all platforms |
+| 🔐 HASH ID | Paste hash → get hashcat mode instantly |
+| 🔌 PORTS | Port reference with attack vectors |
+| 📦 WORDLISTS | SecLists reference with paths |
+| 🐚 GTFOBins | Linux/Windows privilege escalation binaries |
+| 💀 CVEs | Top CVEs with one-liner exploits + MSF modules |
+| 🎯 LOOT | Track flags, hashes, files per host |
+| 🔑 CREDS | Credentials vault with command injection |
+| 📋 CHECKLIST | Methodology checklists for 7 engagement types |
+| 📝 NOTES | Auto-saving scratch pad |
+| 🎓 CPTS | CPTS exam guide — strategy, tips, checklists |
+| ⚒ TEMPLATE FORGE | Nuclei template builder + GF pattern builder |
+| 🃏 TRICKS | HackTricks / coffinxp / LostSec / tomnomnom tricks |
+| 🐛 BUG BOUNTY | 200+ real paid bug bounty reports ($800–$35,000) |
+| 🎮 HACK GAME | Terminal hacking mini-game |
 
 ---
 
-## Quick Start (Local)
+## Stack
 
-### Frontend only (no backend needed)
+| Layer | Tech |
+|---|---|
+| Frontend | React 18 + Vite + Tailwind |
+| Database | Supabase (PostgreSQL) |
+| Hosting | Vercel |
+| Storage | localStorage (notes, creds, loot) |
+
+---
+
+## Run Locally
+
 ```bash
-cd frontend
+git clone https://github.com/0xmous27/htb-intel
+cd htb-intel/frontend
+cp .env.example .env   # fill in your Supabase keys
 npm install
 npm run dev
 # → http://localhost:5173
 ```
 
-### Full stack (with PDF pipeline)
-```bash
-# Backend
-cd backend
-pip install fastapi uvicorn pymupdf pytesseract pillow
-python3 build_data.py        # process PDFs (optional)
-uvicorn main:app --port 8000 --reload
+### Environment Variables
 
-# Frontend
-cd frontend
-npm install
-npm run dev
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_KEY=your-anon-key
+VITE_ADMIN_PASSWORD=your-admin-password
+VITE_SECURITY_ANSWER=your-security-answer
 ```
 
 ---
 
-[click-Test](https://htb-intel.vercel.app)
+## Admin Panel
 
-The app works fully static — no backend required for hosting.
-
----
-
-## Adding Techniques
-
-Edit `backend/data/output.json` directly, or add a new part file and run:
-
-```bash
-cd backend
-python3 merge_data.py
-cp data/output.json ../frontend/src/data/techniques.json
-```
-
----
-
-## Contributing
-
-Pull requests welcome. To add techniques:
-
-1. Edit or add a JSON file in `backend/data/`
-2. Follow the technique format:
-```json
-{
-  "id": "unique_id",
-  "name": "Technique Name",
-  "purpose": "What it does",
-  "when_to_use": "When to use it",
-  "command": "command --flag {TARGET_IP}",
-  "tags": ["tag1", "tag2"]
-}
-```
-3. Run `merge_data.py` and copy output to frontend
-4. Submit PR
-
----
-
-## Tech Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | React + Vite + TailwindCSS |
-| Backend | Python + FastAPI |
-| PDF Processing | PyMuPDF + Tesseract OCR |
-| Hosting | Vercel (frontend) |
-| Storage | localStorage (notes, creds, loot) |
+Hidden at `/admin` — 3-step login (password → security question → Supabase service role key).  
+Full CRUD for all 12 content types. Changes reflect live across all tabs.
 
 ---
 
@@ -118,4 +90,4 @@ MIT — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 
-> *"Root is not the goal. Understanding is."* — 0xmous7
+> *"Root is not the goal. Understanding is."* — 0xmous27
