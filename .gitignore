@@ -21,3 +21,4 @@ nohup.out
 
 # Keep data JSONs but not huge ones
 # backend/data/output.json is committed (needed for static build)
+SESSION.md
