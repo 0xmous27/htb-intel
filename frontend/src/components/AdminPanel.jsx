@@ -485,8 +485,8 @@ function Login({ onLogin }) {
   const submitAns = e => { e.preventDefault(); ans.trim() === SECURITY_ANSWER ? (setStep(3), setErr('')) : doShake('Incorrect answer') }
   const submitKey = e => {
     e.preventDefault()
-    // Validate it looks like a Supabase service_role JWT
-    if (!svcKey.includes('service_role')) { doShake('Invalid service role key'); return }
+    // Validate it looks like a Supabase JWT (starts with eyJ)
+    if (!svcKey.startsWith('eyJ') || svcKey.split('.').length !== 3) { doShake('Invalid service role key'); return }
     getAdminClient(svcKey)
     onLogin()
   }
