@@ -1,33 +1,35 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { TargetProvider } from './hooks/TargetContext'
 import MatrixRain from './components/MatrixRain'
 import CrashText from './components/CrashText'
 import Sidebar from './components/Sidebar'
 import TechniqueCard from './components/TechniqueCard'
 import TargetBar from './components/TargetBar'
-import ToolsView from './components/ToolsView'
-import ServicesView from './components/ServicesView'
-import RegexView from './components/RegexView'
-import OOBView from './components/OOBView'
-import CredsVault from './components/CredsVault'
-import NotesTab from './components/NotesTab'
-import ChecklistTab from './components/ChecklistTab'
-import PayloadGen from './components/PayloadGen'
-import HashID from './components/HashID'
-import WordlistsRef from './components/WordlistsRef'
-import PortRef from './components/PortRef'
-import HackGame from './components/HackGame'
-import RunnerGame from './components/EscapeLogin'
-import CPTSGuide from './components/CPTSGuide'
-import GTFOBins from './components/GTFOBins'
-import CVERef from './components/CVERef'
-import LootTracker from './components/LootTracker'
-import TemplateForge from './components/TemplateForge'
-import TricksTab from './components/TricksTab'
-import BugBountyTab from './components/BugBountyTab'
-import AdminPanel from './components/AdminPanel'
 import Footer from './components/Footer'
 import staticData from './data/techniques.json'
+
+// Lazy-loaded tab components
+const ToolsView = lazy(() => import('./components/ToolsView'))
+const ServicesView = lazy(() => import('./components/ServicesView'))
+const RegexView = lazy(() => import('./components/RegexView'))
+const OOBView = lazy(() => import('./components/OOBView'))
+const CredsVault = lazy(() => import('./components/CredsVault'))
+const NotesTab = lazy(() => import('./components/NotesTab'))
+const ChecklistTab = lazy(() => import('./components/ChecklistTab'))
+const PayloadGen = lazy(() => import('./components/PayloadGen'))
+const HashID = lazy(() => import('./components/HashID'))
+const WordlistsRef = lazy(() => import('./components/WordlistsRef'))
+const PortRef = lazy(() => import('./components/PortRef'))
+const HackGame = lazy(() => import('./components/HackGame'))
+const RunnerGame = lazy(() => import('./components/EscapeLogin'))
+const CPTSGuide = lazy(() => import('./components/CPTSGuide'))
+const GTFOBins = lazy(() => import('./components/GTFOBins'))
+const CVERef = lazy(() => import('./components/CVERef'))
+const LootTracker = lazy(() => import('./components/LootTracker'))
+const TemplateForge = lazy(() => import('./components/TemplateForge'))
+const TricksTab = lazy(() => import('./components/TricksTab'))
+const BugBountyTab = lazy(() => import('./components/BugBountyTab'))
+const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 const TABS = [
   { id: 'techniques', label: '⚡ TECHNIQUES' },
@@ -64,16 +66,14 @@ function App() {
 
   useEffect(() => {
     const total = TABS.length
-    const runSweep = () => {
-      let i = 0
-      const step = setInterval(() => {
-        setTabSweep(i)
-        i++
-        if (i >= total) { clearInterval(step); setTimeout(() => setTabSweep(-1), 500) }
-      }, 160)
-    }
-    const id = setInterval(runSweep, 5000)
-    return () => clearInterval(id)
+    // Run sweep once on load, then stop
+    let i = 0
+    const step = setInterval(() => {
+      setTabSweep(i)
+      i++
+      if (i >= total) { clearInterval(step); setTimeout(() => setTabSweep(-1), 500) }
+    }, 160)
+    return () => clearInterval(step)
   }, [])
 
   useEffect(() => {
@@ -103,7 +103,9 @@ function App() {
         <div className="app-layout" style={{ flexDirection: 'column' }}>
           <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
             <div className="main-content">
-              <AdminPanel />
+              <Suspense fallback={<div className="empty-state">LOADING...</div>}>
+                <AdminPanel />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -134,6 +136,7 @@ function App() {
               })}
             </div>
             <div className="content-area">
+              <Suspense fallback={<div className="empty-state">LOADING...</div>}>
               {tab !== 'techniques' && (
                 <div className="content-header">
                   <span className="content-title">{TABS.find(t => t.id === tab)?.label.replace(/^\S+\s/, '')}</span>
@@ -170,6 +173,7 @@ function App() {
               {tab === 'bugbounty' && <BugBountyTab />}
               {tab === 'game'      && <HackGame />}
               {tab === 'runner'    && <RunnerGame />}
+              </Suspense>
             </div>
           </div>
         </div>

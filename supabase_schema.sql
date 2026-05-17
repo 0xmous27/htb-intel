@@ -142,16 +142,25 @@ create table if not exists gtfobins (
   created_at timestamptz default now()
 );
 
--- Enable RLS on all tables
+-- Enable RLS on all tables — anon: read-only, service_role bypasses RLS entirely
 do $$ declare t text;
 begin
   foreach t in array array['bb_reports','techniques','cves','tools','tricks','wordlists','services','oob_payloads','regex_ref','ports','checklists','gtfobins']
   loop
     execute format('alter table %I enable row level security', t);
+    execute format('drop policy if exists "sel_%s" on %I', t, t);
+    execute format('drop policy if exists "ins_%s" on %I', t, t);
+    execute format('drop policy if exists "upd_%s" on %I', t, t);
+    execute format('drop policy if exists "del_%s" on %I', t, t);
+    -- also drop legacy policy names
     execute format('drop policy if exists "read_%s" on %I', t, t);
     execute format('drop policy if exists "write_%s" on %I', t, t);
-    execute format('create policy "read_%s" on %I for select using (true)', t, t);
-    execute format('create policy "write_%s" on %I for all using (true) with check (true)', t, t);
+    -- anon: SELECT only
+    execute format('create policy "sel_%s" on %I for select using (true)', t, t);
+    -- anon: block INSERT/UPDATE/DELETE
+    execute format('create policy "ins_%s" on %I for insert with check (false)', t, t);
+    execute format('create policy "upd_%s" on %I for update using (false)', t, t);
+    execute format('create policy "del_%s" on %I for delete using (false)', t, t);
   end loop;
 end $$;
 
