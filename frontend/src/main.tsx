@@ -20,10 +20,11 @@ function Root() {
   const storedPill = localStorage.getItem('htb-pill')
   const storedName = localStorage.getItem('htb-intel-name')
 
+  // #6 — Returning users skip PillChoice instantly (no flash)
   const [pill, setPill] = useState(storedPill || null)
   const [name, setName] = useState(storedName || null)
 
-  // Apply stored vars immediately on mount
+  // Apply stored vars immediately on mount (before first render)
   if (storedPill && PILLS_VARS[storedPill]) applyVars(PILLS_VARS[storedPill])
 
   const handleChoose = (p, operatorName) => {
@@ -38,6 +39,7 @@ function Root() {
 
   const neon = pill ? (PILLS_VARS[pill]?.['--neon'] || '#00ff99') : '#00ff99'
 
+  // Skip PillChoice entirely for returning users — no flash
   if (!pill || !name) return <PillChoice onChoose={handleChoose} />
 
   return (

@@ -18,6 +18,13 @@
   --text-faint: #555;
 }
 
+/* #5 — Softer dark mode */
+:root[data-theme="soft"] {
+  --bg: #0a0f0a;
+  --panel: #0f1410;
+  --border: #1a2a1a;
+}
+
 body {
   background: var(--bg);
   color: var(--neon);

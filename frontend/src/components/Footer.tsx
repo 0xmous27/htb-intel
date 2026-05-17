@@ -20,17 +20,38 @@ export default function Footer() {
   const [time, setTime] = useState(new Date().toLocaleTimeString())
   const [visitors, setVisitors] = useState<number | null>(null)
   const [welcome, setWelcome] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
+  const [soft, setSoft] = useState(() => localStorage.getItem('htb-soft-mode') === '1')
+
+  // #5 — Apply soft mode
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', soft ? 'soft' : '')
+    localStorage.setItem('htb-soft-mode', soft ? '1' : '0')
+  }, [soft])
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000)
     return () => clearInterval(t)
   }, [])
 
+  // #7 — Collapse footer on scroll down, show on scroll up
+  useEffect(() => {
+    let lastY = 0
+    const el = document.querySelector('.content-area')
+    if (!el) return
+    const onScroll = () => {
+      const y = el.scrollTop
+      setCollapsed(y > lastY && y > 100)
+      lastY = y
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
   useEffect(() => {
     supabase.rpc('increment_visits').then(({ data }) => {
       if (data) setVisitors(Number(data))
     })
-    // Name is now set during PillChoice — just show welcome back
     const stored = localStorage.getItem('htb-intel-name')
     if (stored) {
       setTimeout(() => {
@@ -54,28 +75,38 @@ export default function Footer() {
       )}
 
       <footer style={{
-        borderTop: '1px solid #0d0d0d', padding: '0.5rem 1.5rem',
+        borderTop: '1px solid #0d0d0d',
+        padding: collapsed ? '0.2rem 1.5rem' : '0.5rem 1.5rem',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         background: 'rgba(4,4,4,0.98)', backdropFilter: 'blur(20px)',
         flexShrink: 0, zIndex: 2, position: 'relative',
+        transition: 'padding 0.3s, opacity 0.3s',
+        opacity: collapsed ? 0.4 : 1,
+        maxHeight: collapsed ? '24px' : '60px',
+        overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px',
           background: `linear-gradient(to right, transparent, ${neon}33 30%, ${neon}66 50%, ${neon}33 70%, transparent)`,
           animation: 'border-flow 4s ease-in-out infinite' }} />
-        <div style={{ fontSize: '0.58rem', color: '#888', fontStyle: 'italic', maxWidth: '500px', lineHeight: 1.4 }}>
-          <span style={{ color: neon, opacity: 0.3 }}>❝ </span>{quote}<span style={{ color: neon, opacity: 0.3 }}> ❞</span>
-        </div>
+        {!collapsed && (
+          <div style={{ fontSize: '0.58rem', color: '#888', fontStyle: 'italic', maxWidth: '500px', lineHeight: 1.4 }}>
+            <span style={{ color: neon, opacity: 0.3 }}>❝ </span>{quote}<span style={{ color: neon, opacity: 0.3 }}> ❞</span>
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.58rem', flexWrap: 'wrap' }}>
           {visitors !== null && (
             <span style={{ color: neon, opacity: 0.6, letterSpacing: '0.08em' }}>◈ {visitors.toLocaleString()} VISITORS</span>
           )}
           <span style={{ color: '#888' }}><span style={{ color: neon, opacity: 0.3 }}>⏱</span> {time}</span>
-          <span style={{ color: '#888' }}>HTB INTEL PLATFORM</span>
-          <span>
-            <span style={{ color: '#888' }}>CRAFTED BY </span>
-            <span style={{ color: neon, textShadow: `0 0 10px ${neon}66`, fontWeight: 700, letterSpacing: '0.1em' }}>0xmous7</span>
-          </span>
-          <span style={{ color: '#555' }}>🩸☕</span>
+          {!collapsed && <>
+            <span style={{ color: '#888' }}>HTB INTEL PLATFORM</span>
+            <span>
+              <span style={{ color: '#888' }}>CRAFTED BY </span>
+              <span style={{ color: neon, textShadow: `0 0 10px ${neon}66`, fontWeight: 700, letterSpacing: '0.1em' }}>0xmous7</span>
+            </span>
+            <span style={{ color: '#555' }}>🩸☕</span>
+            <button onClick={() => setSoft(s => !s)} title={soft ? 'Switch to dark' : 'Switch to soft'} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', opacity: 0.5 }}>{soft ? '🌙' : '👁'}</button>
+          </>}
         </div>
       </footer>
     </>
