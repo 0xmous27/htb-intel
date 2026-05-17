@@ -69,19 +69,20 @@ export default function QuickRef() {
 
   // Merge new entries from Supabase
   const { data: dbRows } = useSupabaseData('quick_ref', [])
-  const staticNames = new Set(ONELINERS.flatMap(s => s.items.map(i => i.name.toLowerCase())))
-  const newFromDb = dbRows.filter(r => !staticNames.has((r.name || '').toLowerCase()))
+  // If DB has data, use it (admin can edit/delete). Otherwise fall back to static.
+  const hasDbData = dbRows.length > 0
 
-  const allSections = [...ONELINERS]
-  for (const row of newFromDb) {
-    const cat = row.category || 'Misc'
-    const existing = allSections.find(s => s.cat === cat)
-    if (existing) {
-      existing.items.push({ name: row.name, cmd: row.cmd })
-    } else {
-      allSections.push({ cat, items: [{ name: row.name, cmd: row.cmd }] })
-    }
-  }
+  const allSections = hasDbData
+    ? (() => {
+        const grouped = {}
+        for (const r of dbRows) {
+          const cat = r.category || 'Misc'
+          if (!grouped[cat]) grouped[cat] = []
+          grouped[cat].push({ name: r.name, cmd: r.cmd })
+        }
+        return Object.entries(grouped).map(([cat, items]) => ({ cat, items }))
+      })()
+    : ONELINERS
 
   const q = filter.toLowerCase()
   const filtered = allSections.map(section => ({

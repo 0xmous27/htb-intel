@@ -80,18 +80,20 @@ export default function ADTab() {
 
   // Merge new entries from Supabase
   const { data: dbRows } = useSupabaseData('ad_techniques', [])
-  const staticNames = new Set(AD_SECTIONS.flatMap(s => s.techniques.map(t => t.name.toLowerCase())))
-  const newFromDb = dbRows.filter(r => !staticNames.has((r.name || '').toLowerCase()))
+  // If DB has data, use it (admin can edit/delete). Otherwise fall back to static.
+  const hasDbData = dbRows.length > 0
 
-  // Group new DB entries by phase
-  const sections = [...AD_SECTIONS]
-  for (const row of newFromDb) {
-    const phase = row.phase || 'Enumeration'
-    const existing = sections.find(s => s.phase.includes(phase))
-    if (existing) {
-      existing.techniques.push({ name: row.name, cmd: row.cmd, when: row.when_to_use || '' })
-    }
-  }
+  const sections = hasDbData
+    ? (() => {
+        const grouped = {}
+        for (const r of dbRows) {
+          const phase = r.phase || 'Enumeration'
+          if (!grouped[phase]) grouped[phase] = []
+          grouped[phase].push({ name: r.name, cmd: r.cmd, when: r.when_to_use || '' })
+        }
+        return Object.entries(grouped).map(([phase, techniques]) => ({ phase: `${phase}`, techniques }))
+      })()
+    : AD_SECTIONS
 
   return (
     <div style={{ padding: '0.5rem' }}>
