@@ -6,9 +6,8 @@ const cache = {}
 
 /**
  * Fetch all rows from a Supabase table with in-memory cache (60s TTL).
- * Falls back to staticData if empty or error.
+ * Falls back to staticData if empty, error, or timeout (5s).
  * Returns { data, loading, stale }
- *   stale = true means showing cached/static data (Supabase unreachable or empty)
  */
 export function useSupabaseData(table, staticData = []) {
   const cached = cache[table]
@@ -24,8 +23,21 @@ export function useSupabaseData(table, staticData = []) {
       return
     }
 
+    let done = false
+    const timeout = setTimeout(() => {
+      if (!done) {
+        done = true
+        setData(staticData)
+        setStale(true)
+        setLoading(false)
+      }
+    }, 5000)
+
     supabase.from(table).select('*').order('created_at', { ascending: false })
       .then(({ data: rows, error }) => {
+        if (done) return
+        done = true
+        clearTimeout(timeout)
         if (!error && rows && rows.length > 0) {
           cache[table] = { rows, ts: Date.now() }
           setData(rows)
@@ -36,6 +48,8 @@ export function useSupabaseData(table, staticData = []) {
         }
         setLoading(false)
       })
+
+    return () => { done = true; clearTimeout(timeout) }
   }, [table])
 
   return { data, loading, stale }
