@@ -178,7 +178,7 @@ function App() {
                   {techniques.map(t => <TechniqueCard key={t.id} technique={t} />)}
                 </>
               )}
-              {tab !== 'techniques' && TAB_COMPONENTS[tab]?.(search)}
+              {tab !== 'techniques' && <div key={tab}>{TAB_COMPONENTS[tab]?.(search)}</div>}
               </Suspense>
             </div>
           </div>
