@@ -96,8 +96,17 @@ export default function BugBountyTab() {
 
   return (
     <div style={{ padding: '1rem' }}>
+      <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: '#050505', border: '1px solid #1a1a1a', fontSize: '0.6rem', color: '#888', lineHeight: 1.9 }}>
+        <div style={{ color: 'var(--neon)', fontSize: '0.7rem', marginBottom: '0.4rem', fontWeight: 700 }}>🎯 BUG BOUNTY METHODOLOGY</div>
+        <div><b style={{color:'#ccc'}}>1. Scope</b> → Read program policy. Note in-scope domains, excluded areas, reward table.</div>
+        <div><b style={{color:'#ccc'}}>2. Recon</b> → Subdomain enum (subfinder, amass) → port scan → tech fingerprint → JS analysis → param discovery</div>
+        <div><b style={{color:'#ccc'}}>3. Map</b> → Crawl all endpoints. Note auth flows, file uploads, API calls, user inputs, role differences.</div>
+        <div><b style={{color:'#ccc'}}>4. Test</b> → IDOR on every ID → XSS on every input → SSRF on every URL param → SQLi on every filter → Auth bypass on every role check</div>
+        <div><b style={{color:'#ccc'}}>5. Chain</b> → Low-impact bugs become critical when chained. Self-XSS + CSRF = stored XSS. Info leak + IDOR = account takeover.</div>
+        <div><b style={{color:'#ccc'}}>6. Report</b> → Clear title, impact statement, step-by-step repro, PoC screenshots/video, suggested fix.</div>
+      </div>
       <div style={{ fontSize: '0.6rem', color: '#555', marginBottom: '0.75rem' }}>
-        Techniques extracted from public HackerOne & Bugcrowd reports. Use for learning and CTF/pentest reference.
+        {filtered.length} reports from public HackerOne & Bugcrowd disclosures. Use for learning and CTF/pentest reference.
       </div>
 
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="search by title, program, tag..."

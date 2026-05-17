@@ -42,6 +42,15 @@ export default function WordlistsRef() {
 
   return (
     <div>
+      <div style={{ marginBottom: '1.5rem', padding: '0.75rem', background: '#050505', border: '1px solid #1a1a1a', fontSize: '0.62rem', color: '#888', lineHeight: 1.8 }}>
+        <div style={{ color: 'var(--neon)', fontSize: '0.7rem', marginBottom: '0.4rem', fontWeight: 700 }}>📖 WHICH WORDLIST FOR WHAT?</div>
+        <div>🔑 <b style={{color:'#ccc'}}>Passwords:</b> rockyou.txt (general), darkweb2017-top10000 (fast), hashesorg2019 (large)</div>
+        <div>📁 <b style={{color:'#ccc'}}>Directories:</b> directory-list-2.3-medium (standard), raft-medium-directories (alt), big.txt (thorough)</div>
+        <div>📄 <b style={{color:'#ccc'}}>Files:</b> raft-medium-files, common.txt (quick), web-extensions.txt (with extensions)</div>
+        <div>🌐 <b style={{color:'#ccc'}}>Subdomains:</b> subdomains-top1million-5000 (fast), subdomains-top1million-110000 (thorough)</div>
+        <div>👤 <b style={{color:'#ccc'}}>Usernames:</b> xato-net-10-million-usernames (large), top-usernames-shortlist (quick spray)</div>
+        <div>🔍 <b style={{color:'#ccc'}}>Parameters:</b> burp-parameter-names.txt (hidden params), raft-medium-words (fuzzing)</div>
+      </div>
       {Object.entries(grouped).map(([cat, lists]) => (
         <div key={cat} style={{ marginBottom: '1.5rem' }}>
           <div className="tools-group-header">{cat}</div>
