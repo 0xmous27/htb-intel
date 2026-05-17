@@ -6,7 +6,6 @@ import Sidebar from './components/Sidebar'
 import TechniqueCard from './components/TechniqueCard'
 import TargetBar from './components/TargetBar'
 import Footer from './components/Footer'
-import staticData from './data/techniques.json'
 
 // Lazy-loaded tab components
 const ToolsView = lazy(() => import('./components/ToolsView'))
@@ -55,6 +54,30 @@ const TABS = [
   { id: 'runner',     label: '😂 CATCH ME' },
 ]
 
+// Tab → component map (search-aware tabs receive search prop)
+const TAB_COMPONENTS = {
+  tools: (s) => <ToolsView search={s} />,
+  services: (s) => <ServicesView search={s} />,
+  oob: (s) => <OOBView search={s} />,
+  regex: (s) => <RegexView search={s} />,
+  payload: () => <PayloadGen />,
+  hash: () => <HashID />,
+  ports: () => <PortRef />,
+  wordlists: () => <WordlistsRef />,
+  gtfo: () => <GTFOBins />,
+  cve: () => <CVERef />,
+  loot: () => <LootTracker />,
+  creds: () => <CredsVault />,
+  checklist: () => <ChecklistTab />,
+  notes: () => <NotesTab />,
+  cpts: () => <CPTSGuide />,
+  forge: () => <TemplateForge />,
+  tricks: () => <TricksTab />,
+  bugbounty: () => <BugBountyTab />,
+  game: () => <HackGame />,
+  runner: () => <RunnerGame />,
+}
+
 function App() {
   const [data, setData] = useState([])
   const [active, setActive] = useState(null)
@@ -80,7 +103,9 @@ function App() {
     fetch('/api/techniques')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
-      .catch(() => { setData(staticData); setLoading(false) }) // fallback to bundled JSON
+      .catch(() => {
+        import('./data/techniques.json').then(m => { setData(m.default); setLoading(false) })
+      })
   }, [])
 
   const categories = useMemo(() => data.map(c => ({ category: c.category, count: c.techniques.length })), [data])
@@ -153,26 +178,7 @@ function App() {
                   {techniques.map(t => <TechniqueCard key={t.id} technique={t} />)}
                 </>
               )}
-              {tab === 'tools'     && <ToolsView search={search} />}
-              {tab === 'services'  && <ServicesView search={search} />}
-              {tab === 'oob'       && <OOBView search={search} />}
-              {tab === 'regex'     && <RegexView search={search} />}
-              {tab === 'payload'   && <PayloadGen />}
-              {tab === 'hash'      && <HashID />}
-              {tab === 'ports'     && <PortRef />}
-              {tab === 'wordlists' && <WordlistsRef />}
-              {tab === 'gtfo'      && <GTFOBins />}
-              {tab === 'cve'       && <CVERef />}
-              {tab === 'loot'      && <LootTracker />}
-              {tab === 'creds'     && <CredsVault />}
-              {tab === 'checklist' && <ChecklistTab />}
-              {tab === 'notes'     && <NotesTab />}
-              {tab === 'cpts'      && <CPTSGuide />}
-              {tab === 'forge'     && <TemplateForge />}
-              {tab === 'tricks'    && <TricksTab />}
-              {tab === 'bugbounty' && <BugBountyTab />}
-              {tab === 'game'      && <HackGame />}
-              {tab === 'runner'    && <RunnerGame />}
+              {tab !== 'techniques' && TAB_COMPONENTS[tab]?.(search)}
               </Suspense>
             </div>
           </div>

@@ -4,7 +4,7 @@
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 echo "[*] Starting backend..."
-cd "$ROOT/backend"
+cd "$ROOT/scripts"
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
 
