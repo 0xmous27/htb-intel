@@ -42,8 +42,12 @@ export default function GTFOBins() {
   const [copied, setCopied] = useState<string | null>(null)
   const { inject } = useTargetCtx()
 
-  const { data: rawData } = useSupabaseData('gtfobins', GTFO as any[])
-  const bins = rawData.map(normGtfo)
+  const { data: rawData } = useSupabaseData('gtfobins', [])
+
+  // Merge: static GTFO is the rich base, Supabase adds new entries
+  const staticNames = new Set((GTFO as any[]).map(b => b.name.toLowerCase()))
+  const newFromDb = rawData.map(normGtfo).filter(b => !staticNames.has(b.name.toLowerCase()))
+  const bins = [...(GTFO as any[]).map(normGtfo), ...newFromDb]
 
   const filtered = bins.filter(b =>
     (os === 'all' || b.os === os) &&

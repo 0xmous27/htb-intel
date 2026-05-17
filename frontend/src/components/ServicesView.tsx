@@ -108,12 +108,17 @@ function ServiceCard({ svc }: { svc: Service }) {
 }
 
 export default function ServicesView({ search }: { search: string }) {
-  const { data: dbServices } = useSupabaseData<Service>('services', STATIC_FLAT)
+  const { data: dbServices } = useSupabaseData<Service>('services', [])
+
+  // Merge: static data is the rich base, Supabase adds new entries not in static
+  const staticIds = new Set(STATIC_FLAT.map(s => s.name.toLowerCase()))
+  const newFromDb = dbServices.filter(s => !staticIds.has((s.name || '').toLowerCase()))
+  const allServices = [...STATIC_FLAT, ...newFromDb]
 
   const q = (search || '').toLowerCase()
 
   const grouped: Record<string, Service[]> = {}
-  for (const s of dbServices) {
+  for (const s of allServices) {
     const cat = s._group || s.category || 'Services'
     if (!grouped[cat]) grouped[cat] = []
     grouped[cat].push(s)
