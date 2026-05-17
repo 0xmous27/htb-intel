@@ -82,7 +82,10 @@ export default function ChecklistTab() {
 
   const { data: dbRows } = useSupabaseData('checklists', [])
   const dbChecklists = dbRows.map(dbToChecklist)
-  const allLists: Checklist[] = [...(CHECKLISTS as Checklist[]), ...dbChecklists]
+  // Only add Supabase entries not already in static (avoid empty duplicates)
+  const staticNames = new Set((CHECKLISTS as Checklist[]).map(c => c.name.toLowerCase()))
+  const newFromDb = dbChecklists.filter(c => !staticNames.has(c.name.toLowerCase()))
+  const allLists: Checklist[] = [...(CHECKLISTS as Checklist[]), ...newFromDb]
 
   const toggle = (key: string) => {
     setChecked(p => {
