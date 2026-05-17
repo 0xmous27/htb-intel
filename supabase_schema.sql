@@ -198,3 +198,37 @@ create policy "sel_site_stats" on site_stats for select using (true);
 create policy "ins_site_stats" on site_stats for insert with check (false);
 create policy "upd_site_stats" on site_stats for update using (false);
 create policy "del_site_stats" on site_stats for delete using (false);
+
+-- ── AD Techniques table ───────────────────────────────────────────────────────
+create table if not exists ad_techniques (
+  id text primary key,
+  phase text not null,
+  name text not null,
+  cmd text not null,
+  when_to_use text,
+  tags text[],
+  created_at timestamptz default now()
+);
+
+-- ── Quick Ref table ───────────────────────────────────────────────────────────
+create table if not exists quick_ref (
+  id text primary key,
+  category text not null,
+  name text not null,
+  cmd text not null,
+  tags text[],
+  created_at timestamptz default now()
+);
+
+-- RLS for new tables
+do $$ declare t text;
+begin
+  foreach t in array array['ad_techniques','quick_ref']
+  loop
+    execute format('alter table %I enable row level security', t);
+    execute format('create policy "sel_%s" on %I for select using (true)', t, t);
+    execute format('create policy "ins_%s" on %I for insert with check (false)', t, t);
+    execute format('create policy "upd_%s" on %I for update using (false)', t, t);
+    execute format('create policy "del_%s" on %I for delete using (false)', t, t);
+  end loop;
+end $$;

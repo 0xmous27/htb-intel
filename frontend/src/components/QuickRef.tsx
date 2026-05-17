@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState } from 'react'
 import { useTargetCtx } from '../hooks/TargetContext'
+import { useSupabaseData } from '../hooks/useSupabaseData'
 
 const ONELINERS = [
   { cat: 'Shell Upgrades', items: [
@@ -66,8 +67,24 @@ export default function QuickRef() {
   const [filter, setFilter] = useState('')
   const { inject } = useTargetCtx()
 
+  // Merge new entries from Supabase
+  const { data: dbRows } = useSupabaseData('quick_ref', [])
+  const staticNames = new Set(ONELINERS.flatMap(s => s.items.map(i => i.name.toLowerCase())))
+  const newFromDb = dbRows.filter(r => !staticNames.has((r.name || '').toLowerCase()))
+
+  const allSections = [...ONELINERS]
+  for (const row of newFromDb) {
+    const cat = row.category || 'Misc'
+    const existing = allSections.find(s => s.cat === cat)
+    if (existing) {
+      existing.items.push({ name: row.name, cmd: row.cmd })
+    } else {
+      allSections.push({ cat, items: [{ name: row.name, cmd: row.cmd }] })
+    }
+  }
+
   const q = filter.toLowerCase()
-  const filtered = ONELINERS.map(section => ({
+  const filtered = allSections.map(section => ({
     ...section,
     items: section.items.filter(i => !q || i.name.toLowerCase().includes(q) || i.cmd.toLowerCase().includes(q) || section.cat.toLowerCase().includes(q))
   })).filter(s => s.items.length > 0)

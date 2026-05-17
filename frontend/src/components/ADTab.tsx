@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState } from 'react'
 import { useTargetCtx } from '../hooks/TargetContext'
+import { useSupabaseData } from '../hooks/useSupabaseData'
 
 const AD_SECTIONS = [
   {
@@ -76,6 +77,21 @@ function CopyBtn({ text }) {
 export default function ADTab() {
   const [openPhase, setOpenPhase] = useState(AD_SECTIONS[0].phase)
   const { inject } = useTargetCtx()
+
+  // Merge new entries from Supabase
+  const { data: dbRows } = useSupabaseData('ad_techniques', [])
+  const staticNames = new Set(AD_SECTIONS.flatMap(s => s.techniques.map(t => t.name.toLowerCase())))
+  const newFromDb = dbRows.filter(r => !staticNames.has((r.name || '').toLowerCase()))
+
+  // Group new DB entries by phase
+  const sections = [...AD_SECTIONS]
+  for (const row of newFromDb) {
+    const phase = row.phase || 'Enumeration'
+    const existing = sections.find(s => s.phase.includes(phase))
+    if (existing) {
+      existing.techniques.push({ name: row.name, cmd: row.cmd, when: row.when_to_use || '' })
+    }
+  }
 
   return (
     <div style={{ padding: '0.5rem' }}>

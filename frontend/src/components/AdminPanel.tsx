@@ -128,6 +128,18 @@ const TABLES = [
     required: ['id','bin_name','bin_function'],
     categoryOptions: ['shell','file-read','file-write','sudo','suid','capabilities','cron','env'],
   },
+  {
+    key: 'ad_techniques', label: '🏢 AD Techniques',
+    fields: ['id','phase','name','cmd','when_to_use','tags'],
+    required: ['id','phase','name','cmd'],
+    categoryOptions: ['Enumeration','Credential Attacks','BloodHound','Lateral Movement','Domain Escalation','Post-Compromise'],
+  },
+  {
+    key: 'quick_ref', label: '⚡ Quick Ref',
+    fields: ['id','category','name','cmd','tags'],
+    required: ['id','category','name','cmd'],
+    categoryOptions: ['Shell Upgrades','File Transfer','Enumeration','Reverse Shells','Listeners','Credential Hunting','Windows Quick Wins'],
+  },
 ]
 
 const TEXTAREA_FIELDS = ['description','steps','payload','command','exploit','install','usage','cmd','affected','enum_cmd','pattern','items','attacks','cves_list','notes','manual','purpose','when_to_use','setup','note']
