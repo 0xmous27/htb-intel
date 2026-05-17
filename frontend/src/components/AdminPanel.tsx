@@ -145,36 +145,54 @@ const TABLES = [
 const TEXTAREA_FIELDS = ['description','steps','payload','command','exploit','install','usage','cmd','affected','enum_cmd','pattern','items','attacks','cves_list','notes','manual','purpose','when_to_use','setup','note']
 const ARRAY_FIELDS = ['tags']
 const SEV_COLOR = { CRITICAL:'#ff3333', HIGH:'#ff9900', MEDIUM:'#ffcc00', LOW:'#00ff99', INFO:'#4488ff' }
-const S = { panel:'#080808', border:'#151515', text:'#ccc', muted:'#555', faint:'#111', font:'inherit' }
+
+// ── Admin-specific styles (not hacker-themed) ─────────────────────────────────
+const A = {
+  bg: '#0c0c0c',
+  card: '#111',
+  border: '#222',
+  text: '#e0e0e0',
+  muted: '#888',
+  dim: '#555',
+  accent: '#4f9eff',
+  danger: '#ff4444',
+  success: '#44cc88',
+  warn: '#ffaa33',
+  font: "'JetBrains Mono', monospace",
+  radius: '4px',
+}
 
 // ── Primitives ────────────────────────────────────────────────────────────────
 function Inp({ value, onChange, placeholder, type = 'text', style = {} }) {
   return (
     <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      style={{ background:'#030303', border:'1px solid #1a1a1a', color:S.text, fontFamily:S.font,
-        fontSize:'0.7rem', padding:'0.4rem 0.6rem', outline:'none', width:'100%', boxSizing:'border-box', ...style }}
-      onFocus={e => e.target.style.borderColor='var(--neon)'}
-      onBlur={e => e.target.style.borderColor='#1a1a1a'} />
+      style={{ background: '#0a0a0a', border:`1px solid ${A.border}`, color: A.text, fontFamily: A.font,
+        fontSize:'0.82rem', padding:'0.55rem 0.75rem', outline:'none', width:'100%', boxSizing:'border-box',
+        borderRadius: A.radius, transition:'border-color 0.2s', ...style }}
+      onFocus={e => e.target.style.borderColor = A.accent}
+      onBlur={e => e.target.style.borderColor = A.border} />
   )
 }
 
 function Txta({ value, onChange, placeholder, rows = 3 }) {
   return (
     <textarea value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
-      style={{ background:'#030303', border:'1px solid #1a1a1a', color:S.text, fontFamily:S.font,
-        fontSize:'0.68rem', padding:'0.4rem 0.6rem', outline:'none', width:'100%', boxSizing:'border-box', resize:'vertical', lineHeight:1.5 }}
-      onFocus={e => e.target.style.borderColor='var(--neon)'}
-      onBlur={e => e.target.style.borderColor='#1a1a1a'} />
+      style={{ background:'#0a0a0a', border:`1px solid ${A.border}`, color: A.text, fontFamily: A.font,
+        fontSize:'0.78rem', padding:'0.55rem 0.75rem', outline:'none', width:'100%', boxSizing:'border-box',
+        resize:'vertical', lineHeight:1.6, borderRadius: A.radius, transition:'border-color 0.2s' }}
+      onFocus={e => e.target.style.borderColor = A.accent}
+      onBlur={e => e.target.style.borderColor = A.border} />
   )
 }
 
 function Sel({ value, onChange, options, placeholder }) {
   return (
     <select value={value ?? ''} onChange={e => onChange(e.target.value)}
-      style={{ background:'#030303', border:'1px solid #1a1a1a', color: value ? S.text : S.muted, fontFamily:S.font,
-        fontSize:'0.7rem', padding:'0.4rem 0.6rem', outline:'none', width:'100%', boxSizing:'border-box', cursor:'pointer' }}
-      onFocus={e => e.target.style.borderColor='var(--neon)'}
-      onBlur={e => e.target.style.borderColor='#1a1a1a'}>
+      style={{ background:'#0a0a0a', border:`1px solid ${A.border}`, color: value ? A.text : A.dim, fontFamily: A.font,
+        fontSize:'0.82rem', padding:'0.55rem 0.75rem', outline:'none', width:'100%', boxSizing:'border-box',
+        cursor:'pointer', borderRadius: A.radius }}
+      onFocus={e => e.target.style.borderColor = A.accent}
+      onBlur={e => e.target.style.borderColor = A.border}>
       <option value="">{placeholder || '— select —'}</option>
       {options.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -182,17 +200,19 @@ function Sel({ value, onChange, options, placeholder }) {
 }
 
 function Btn({ children, onClick, variant = 'primary', disabled, type = 'button', style = {} }) {
-  const v = {
-    primary: { borderColor:'var(--neon)', color:'var(--neon)' },
-    danger:  { borderColor:'#ff333355', color:'#ff3333' },
-    ghost:   { borderColor:'#222', color:'#555' },
-    warn:    { borderColor:'#ff990055', color:'#ff9900' },
+  const variants = {
+    primary: { background: A.accent, borderColor: A.accent, color: '#fff' },
+    danger:  { background: 'transparent', borderColor: A.danger, color: A.danger },
+    ghost:   { background: 'transparent', borderColor: A.border, color: A.muted },
+    warn:    { background: 'transparent', borderColor: A.warn, color: A.warn },
+    success: { background: A.success, borderColor: A.success, color: '#000' },
   }
+  const v = variants[variant] || variants.primary
   return (
     <button type={type} onClick={onClick} disabled={disabled}
-      style={{ background:'none', border:'1px solid', fontFamily:S.font, fontSize:'0.62rem',
-        padding:'0.35rem 0.9rem', cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1, transition:'all 0.15s', ...v[variant], ...style }}>
+      style={{ border:'1px solid', fontFamily: A.font, fontSize:'0.75rem', fontWeight: 600,
+        padding:'0.45rem 1.1rem', cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1, transition:'all 0.15s', borderRadius: A.radius, ...v, ...style }}>
       {children}
     </button>
   )
@@ -205,13 +225,13 @@ function Hint({ text }) {
       <span
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
-        style={{ fontSize:'0.48rem', color:'#333', border:'1px solid #222', borderRadius:'50%',
-          width:'12px', height:'12px', display:'inline-flex', alignItems:'center', justifyContent:'center',
+        style={{ fontSize:'0.6rem', color: A.dim, border:`1px solid ${A.border}`, borderRadius:'50%',
+          width:'14px', height:'14px', display:'inline-flex', alignItems:'center', justifyContent:'center',
           cursor:'help', userSelect:'none', lineHeight:1 }}>?</span>
       {show && (
-        <div style={{ position:'absolute', left:'16px', top:'-4px', zIndex:9999, background:'#0d0d0d',
-          border:'1px solid #2a2a2a', color:'#aaa', fontSize:'0.6rem', padding:'0.5rem 0.75rem',
-          width:'220px', lineHeight:1.5, pointerEvents:'none', boxShadow:'0 4px 20px #000' }}>
+        <div style={{ position:'absolute', left:'18px', top:'-4px', zIndex:9999, background: A.card,
+          border:`1px solid ${A.border}`, color: A.muted, fontSize:'0.72rem', padding:'0.6rem 0.85rem',
+          width:'240px', lineHeight:1.5, pointerEvents:'none', boxShadow:'0 4px 20px #000', borderRadius: A.radius }}>
           {text}
         </div>
       )}
@@ -221,12 +241,12 @@ function Hint({ text }) {
 
 function Toast({ msg }) {
   if (!msg) return null
-  const c = msg.ok ? 'var(--neon)' : '#ff3333'
+  const c = msg.ok ? A.success : A.danger
   return (
     <div style={{ position:'fixed', bottom:'1.5rem', right:'1.5rem', zIndex:9999,
-      background:'#050505', border:`1px solid ${c}`, color:c,
-      padding:'0.6rem 1.2rem', fontSize:'0.65rem', boxShadow:`0 0 20px ${c}22` }}>
-      {msg.text}
+      background: A.card, border:`1px solid ${c}`, color: c, borderRadius: A.radius,
+      padding:'0.75rem 1.5rem', fontSize:'0.8rem', boxShadow:`0 4px 20px ${c}22`, fontWeight: 600 }}>
+      {msg.ok ? '✓' : '✕'} {msg.text}
     </div>
   )
 }
@@ -267,8 +287,8 @@ function RecordForm({ table, initial, onSave, onCancel, saving }) {
 
           return (
             <div key={f} style={{ gridColumn: wide ? 'span 2' : 'span 1' }}>
-              <div style={{ fontSize:'0.52rem', color: req ? 'var(--neon)' : S.muted, marginBottom:'3px',
-                letterSpacing:'0.05em', display:'flex', alignItems:'center', gap:'2px' }}>
+              <div style={{ fontSize:'0.7rem', color: req ? A.accent : A.muted, marginBottom:'5px',
+                letterSpacing:'0.03em', display:'flex', alignItems:'center', gap:'4px', fontWeight: req ? 600 : 400 }}>
                 {f.replace(/_/g,' ').toUpperCase()}{req ? ' *' : ''}
                 {meta.hint && <Hint text={meta.hint} />}
               </div>
@@ -368,13 +388,13 @@ function TableManager({ table }) {
 
       {/* Confirm delete modal */}
       {confirm && (
-        <div style={{ position:'fixed', inset:0, background:'#000000cc', zIndex:9998, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'#0a0a0a', border:'1px solid #ff333355', padding:'1.5rem', minWidth:'300px' }}>
-            <div style={{ fontSize:'0.7rem', color:'#ff3333', marginBottom:'0.5rem' }}>⚠ CONFIRM DELETE</div>
-            <div style={{ fontSize:'0.62rem', color:S.muted, marginBottom:'1rem' }}>
-              Delete <span style={{ color:S.text }}>{confirm}</span>? This cannot be undone.
+        <div style={{ position:'fixed', inset:0, background:'#000000dd', zIndex:9998, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ background: A.card, border:`1px solid ${A.danger}`, padding:'2rem', minWidth:'340px', borderRadius: A.radius }}>
+            <div style={{ fontSize:'0.9rem', color: A.danger, marginBottom:'0.75rem', fontWeight:700 }}>⚠ Confirm Delete</div>
+            <div style={{ fontSize:'0.78rem', color: A.muted, marginBottom:'1.25rem' }}>
+              Delete <span style={{ color: A.text }}>{confirm}</span>? This cannot be undone.
             </div>
-            <div style={{ display:'flex', gap:'0.5rem' }}>
+            <div style={{ display:'flex', gap:'0.75rem' }}>
               <Btn variant="danger" onClick={() => remove(confirm)}>DELETE</Btn>
               <Btn variant="ghost" onClick={() => setConfirm(null)}>CANCEL</Btn>
             </div>
@@ -383,20 +403,20 @@ function TableManager({ table }) {
       )}
 
       {/* Toolbar */}
-      <div style={{ display:'flex', gap:'0.5rem', marginBottom:'1rem', alignItems:'center', flexWrap:'wrap' }}>
+      <div style={{ display:'flex', gap:'0.75rem', marginBottom:'1.25rem', alignItems:'center', flexWrap:'wrap' }}>
         <Inp value={search} onChange={v => { setSearch(v); setPage(0) }}
-          placeholder={`search ${table.label}...`} style={{ flex:1, minWidth:'160px' }} />
-        <span style={{ fontSize:'0.52rem', color:S.muted, whiteSpace:'nowrap' }}>
-          {filtered.length}/{rows.length} records
+          placeholder={`Search ${table.label}...`} style={{ flex:1, minWidth:'200px' }} />
+        <span style={{ fontSize:'0.72rem', color: A.dim, whiteSpace:'nowrap' }}>
+          {filtered.length} of {rows.length}
         </span>
-        <Btn onClick={() => { setMode('add'); window.scrollTo(0, 0) }} style={{ whiteSpace:'nowrap' }}>+ ADD NEW</Btn>
+        <Btn onClick={() => { setMode('add'); window.scrollTo(0, 0) }}>+ Add New</Btn>
       </div>
 
       {/* Add form */}
       {mode === 'add' && (
-        <div style={{ border:'1px solid var(--neon)', padding:'1.25rem', marginBottom:'1rem', background:S.panel }}>
-          <div style={{ fontSize:'0.6rem', color:'var(--neon)', marginBottom:'0.75rem', letterSpacing:'0.1em' }}>
-            {dupData ? '⧉ DUPLICATE RECORD' : 'NEW RECORD'} — {table.label}
+        <div style={{ border:`1px solid ${A.accent}`, padding:'1.5rem', marginBottom:'1.25rem', background: A.card, borderRadius: A.radius }}>
+          <div style={{ fontSize:'0.85rem', color: A.accent, marginBottom:'1rem', fontWeight:700 }}>
+            {dupData ? '⧉ Duplicate Record' : '+ New Record'}
           </div>
           <RecordForm table={table} initial={dupData} onSave={(rec) => { save(rec); setDupData(null) }} onCancel={() => { setMode(null); setDupData(null) }} saving={saving} />
         </div>
@@ -404,9 +424,9 @@ function TableManager({ table }) {
 
       {/* Edit form */}
       {editingRow && (
-        <div style={{ border:'1px solid #ff990044', padding:'1.25rem', marginBottom:'1rem', background:S.panel }}>
-          <div style={{ fontSize:'0.6rem', color:'#ff9900', marginBottom:'0.75rem', letterSpacing:'0.1em' }}>
-            EDITING: {editingRow.id}
+        <div style={{ border:`1px solid ${A.warn}`, padding:'1.5rem', marginBottom:'1.25rem', background: A.card, borderRadius: A.radius }}>
+          <div style={{ fontSize:'0.85rem', color: A.warn, marginBottom:'1rem', fontWeight:700 }}>
+            ✏ Editing: {editingRow.id}
           </div>
           <RecordForm table={table} initial={editingRow} onSave={save} onCancel={() => setMode(null)} saving={saving} />
         </div>
@@ -414,53 +434,49 @@ function TableManager({ table }) {
 
       {/* Records list */}
       {loading ? (
-        <div style={{ fontSize:'0.65rem', color:S.muted, padding:'2rem', textAlign:'center' }}>LOADING...</div>
+        <div style={{ fontSize:'0.85rem', color: A.dim, padding:'3rem', textAlign:'center' }}>Loading...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ fontSize:'0.65rem', color:S.muted, padding:'2rem', textAlign:'center', border:'1px dashed #111' }}>
-          {rows.length === 0 ? 'No records yet — click + ADD NEW' : 'No results for "' + search + '"'}
+        <div style={{ fontSize:'0.85rem', color: A.dim, padding:'3rem', textAlign:'center', border:`1px dashed ${A.border}`, borderRadius: A.radius }}>
+          {rows.length === 0 ? 'No records yet — click + Add New' : `No results for "${search}"`}
         </div>
       ) : (
         <>
-          <div style={{ display:'flex', flexDirection:'column', gap:'2px' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:'3px' }}>
             {paged.map(row => (
               <div key={row.id} style={{
-                display:'flex', alignItems:'center', gap:'0.5rem',
-                padding:'0.45rem 0.75rem',
-                background: mode === row.id ? '#0d0d0d' : S.panel,
-                border:`1px solid ${mode === row.id ? '#ff990044' : S.border}`,
+                display:'flex', alignItems:'center', gap:'0.75rem',
+                padding:'0.65rem 1rem',
+                background: mode === row.id ? '#1a1a1a' : A.card,
+                border:`1px solid ${mode === row.id ? A.warn : A.border}`,
+                borderRadius: A.radius,
               }}>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:'0.68rem', color:S.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  <div style={{ fontSize:'0.82rem', color: A.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontWeight:500 }}>
                     {row[labelField]}
                   </div>
-                  <div style={{ fontSize:'0.52rem', color:S.muted }}>{row.id}</div>
+                  <div style={{ fontSize:'0.65rem', color: A.dim, marginTop:'2px' }}>{row.id}</div>
                 </div>
-                <div style={{ display:'flex', gap:'0.25rem', alignItems:'center', flexShrink:0 }}>
+                <div style={{ display:'flex', gap:'0.3rem', alignItems:'center', flexShrink:0 }}>
                   {row.severity && (
-                    <span style={{ fontSize:'0.5rem', color:SEV_COLOR[row.severity]||'#888',
-                      border:`1px solid ${(SEV_COLOR[row.severity]||'#888')}33`, padding:'1px 5px' }}>
+                    <span style={{ fontSize:'0.65rem', color: SEV_COLOR[row.severity]||'#888',
+                      border:`1px solid ${(SEV_COLOR[row.severity]||'#888')}44`, padding:'2px 8px', borderRadius:'3px' }}>
                       {row.severity}
                     </span>
                   )}
                   {row.category && (
-                    <span style={{ fontSize:'0.5rem', color:S.muted, border:'1px solid #1a1a1a', padding:'1px 5px',
-                      maxWidth:'100px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    <span style={{ fontSize:'0.65rem', color: A.dim, background:'#1a1a1a', padding:'2px 8px', borderRadius:'3px',
+                      maxWidth:'120px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                       {row.category}
                     </span>
                   )}
-                  {row.bounty && (
-                    <span style={{ fontSize:'0.5rem', color:'#00ff99', border:'1px solid #00ff9933', padding:'1px 5px' }}>
-                      {row.bounty}
-                    </span>
-                  )}
                 </div>
-                <div style={{ display:'flex', gap:'0.25rem', flexShrink:0 }}>
+                <div style={{ display:'flex', gap:'0.3rem', flexShrink:0 }}>
                   <Btn variant="ghost" onClick={() => { setMode(row.id); window.scrollTo(0, 0) }}
-                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>✏ EDIT</Btn>
+                    style={{ padding:'4px 10px', fontSize:'0.65rem' }}>Edit</Btn>
                   <Btn variant="warn" onClick={() => { setDupData({...row, id: row.id + '-copy'}); setMode('add'); window.scrollTo(0, 0) }}
-                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>⧉ DUP</Btn>
+                    style={{ padding:'4px 10px', fontSize:'0.65rem' }}>Dup</Btn>
                   <Btn variant="danger" onClick={() => setConfirm(row.id)}
-                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>✕</Btn>
+                    style={{ padding:'4px 10px', fontSize:'0.65rem' }}>✕</Btn>
                 </div>
               </div>
             ))}
@@ -468,14 +484,14 @@ function TableManager({ table }) {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ display:'flex', gap:'0.3rem', marginTop:'0.75rem', alignItems:'center' }}>
+            <div style={{ display:'flex', gap:'0.5rem', marginTop:'1rem', alignItems:'center' }}>
               <Btn variant="ghost" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-                style={{ padding:'2px 8px', fontSize:'0.52rem' }}>← PREV</Btn>
-              <span style={{ fontSize:'0.52rem', color:S.muted }}>
-                Page {page + 1} / {totalPages}
+                style={{ padding:'4px 12px', fontSize:'0.7rem' }}>← Prev</Btn>
+              <span style={{ fontSize:'0.72rem', color: A.dim }}>
+                Page {page + 1} of {totalPages}
               </span>
               <Btn variant="ghost" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-                style={{ padding:'2px 8px', fontSize:'0.52rem' }}>NEXT →</Btn>
+                style={{ padding:'4px 12px', fontSize:'0.7rem' }}>Next →</Btn>
             </div>
           )}
         </>
@@ -504,28 +520,28 @@ function Login({ onLogin }) {
   }
 
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'80vh' }}>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', background: A.bg }}>
       <style>{`@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}`}</style>
       <div style={{
-        border:`1px solid ${err ? '#ff3333' : '#1a1a1a'}`, padding:'2.5rem', minWidth:'320px',
-        background:'#050505', transition:'border-color 0.2s',
+        border:`1px solid ${err ? A.danger : A.border}`, padding:'3rem', minWidth:'360px',
+        background: A.card, transition:'border-color 0.2s', borderRadius:'6px',
         animation: shake ? 'shake 0.3s ease' : 'none',
-        boxShadow: err ? '0 0 30px #ff333322' : '0 0 40px #00000099',
+        boxShadow: err ? `0 0 30px ${A.danger}22` : '0 4px 40px #00000066',
       }}>
-        <div style={{ textAlign:'center', marginBottom:'2rem' }}>
-          <div style={{ fontSize:'2rem' }}>🔑</div>
-          <div style={{ fontSize:'0.8rem', color:'var(--neon)', letterSpacing:'0.2em', marginTop:'0.5rem' }}>ADMIN ACCESS</div>
-          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'3px' }}>Paste your Supabase service role key</div>
+        <div style={{ textAlign:'center', marginBottom:'2.5rem' }}>
+          <div style={{ fontSize:'2.5rem' }}>🔑</div>
+          <div style={{ fontSize:'1.1rem', color: A.accent, fontWeight:700, marginTop:'0.75rem' }}>Admin Access</div>
+          <div style={{ fontSize:'0.72rem', color: A.dim, marginTop:'6px' }}>Paste your Supabase service role key</div>
         </div>
 
         <form onSubmit={submitKey}>
-          <div style={{ marginBottom:'1rem' }}>
-            <div style={{ fontSize:'0.52rem', color:S.muted, marginBottom:'4px' }}>SERVICE ROLE KEY</div>
+          <div style={{ marginBottom:'1.25rem' }}>
+            <div style={{ fontSize:'0.72rem', color: A.muted, marginBottom:'6px', fontWeight:600 }}>SERVICE ROLE KEY</div>
             <Inp type="password" value={svcKey} onChange={setSvcKey} placeholder="eyJhbGci..." />
-            <div style={{ fontSize:'0.5rem', color:'#333', marginTop:'4px' }}>Required for write access. Never stored — memory only.</div>
+            <div style={{ fontSize:'0.65rem', color: A.dim, marginTop:'6px' }}>Required for write access. Never stored — memory only.</div>
           </div>
-          {err && <div style={{ fontSize:'0.6rem', color:'#ff3333', marginBottom:'0.75rem' }}>⚠ {err}</div>}
-          <Btn type="submit" style={{ width:'100%' }}>AUTHENTICATE →</Btn>
+          {err && <div style={{ fontSize:'0.75rem', color: A.danger, marginBottom:'1rem' }}>⚠ {err}</div>}
+          <Btn type="submit" style={{ width:'100%', padding:'0.6rem', fontSize:'0.85rem' }}>Authenticate →</Btn>
         </form>
       </div>
     </div>
@@ -555,38 +571,45 @@ export default function AdminPanel() {
   if (!authed) return <Login onLogin={login} />
 
   return (
-    <div style={{ padding:'1.5rem', maxWidth:'1200px', margin:'0 auto' }}>
-      {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-        marginBottom:'1.5rem', paddingBottom:'1rem', borderBottom:'1px solid #111' }}>
-        <div>
-          <div style={{ fontSize:'0.9rem', color:'var(--neon)', letterSpacing:'0.15em', fontWeight:700 }}>⚙ ADMIN PANEL</div>
-          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'2px' }}>HTB Intel — Content Management • {Object.values(stats).reduce((a, b) => a + (b || 0), 0)} total records</div>
-        </div>
-        <div style={{ display:'flex', gap:'0.5rem', alignItems:'center' }}>
-          <Btn variant="ghost" onClick={loadStats} style={{ fontSize:'0.52rem', padding:'0.25rem 0.6rem' }}>↻ REFRESH</Btn>
-          <Btn variant="danger" onClick={logout} style={{ fontSize:'0.52rem', padding:'0.25rem 0.6rem' }}>⏻ LOGOUT</Btn>
-        </div>
-      </div>
-
-      {/* Stats dashboard — clickable cards */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(110px, 1fr))', gap:'0.4rem', marginBottom:'1.5rem' }}>
-        {TABLES.map(t => (
-          <div key={t.key}
-            onClick={() => setActiveTable(t)}
-            style={{
-              background: activeTable.key === t.key ? 'rgba(0,255,153,0.03)' : S.panel,
-              border:`1px solid ${activeTable.key === t.key ? 'var(--neon)' : '#111'}`,
-              padding:'0.6rem 0.75rem', cursor:'pointer', transition:'all 0.15s',
-              borderLeft: activeTable.key === t.key ? '3px solid var(--neon)' : '3px solid transparent',
-            }}>
-            <div style={{ fontSize:'1.1rem', color: activeTable.key === t.key ? 'var(--neon)' : '#666', fontWeight:700 }}>{stats[t.key] ?? '—'}</div>
-            <div style={{ fontSize:'0.48rem', color: activeTable.key === t.key ? 'var(--neon)' : S.muted, marginTop:'2px', letterSpacing:'0.05em' }}>{t.label}</div>
+    <div style={{ display:'flex', minHeight:'100vh', background: A.bg }}>
+      {/* Sidebar */}
+      <div style={{ width:'220px', background:'#090909', borderRight:`1px solid ${A.border}`, padding:'1.25rem 0', flexShrink:0, overflowY:'auto' }}>
+        <div style={{ padding:'0 1rem 1rem', borderBottom:`1px solid ${A.border}`, marginBottom:'0.75rem' }}>
+          <div style={{ fontSize:'1rem', color: A.accent, fontWeight:700, letterSpacing:'0.05em' }}>⚙ ADMIN</div>
+          <div style={{ fontSize:'0.65rem', color: A.dim, marginTop:'4px' }}>
+            {Object.values(stats).reduce((a, b) => a + (b || 0), 0)} total records
           </div>
+        </div>
+        {TABLES.map(t => (
+          <button key={t.key} onClick={() => setActiveTable(t)} style={{
+            width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center',
+            padding:'0.6rem 1rem', background: activeTable.key === t.key ? '#151515' : 'transparent',
+            border:'none', borderLeft: activeTable.key === t.key ? `3px solid ${A.accent}` : '3px solid transparent',
+            color: activeTable.key === t.key ? A.text : A.muted,
+            fontFamily: A.font, fontSize:'0.72rem', cursor:'pointer', transition:'all 0.1s', textAlign:'left',
+          }}>
+            <span>{t.label}</span>
+            <span style={{ fontSize:'0.65rem', color: A.dim, background:'#1a1a1a', padding:'1px 6px', borderRadius:'3px' }}>
+              {stats[t.key] ?? '—'}
+            </span>
+          </button>
         ))}
+        <div style={{ padding:'1rem', borderTop:`1px solid ${A.border}`, marginTop:'0.75rem' }}>
+          <Btn variant="ghost" onClick={loadStats} style={{ width:'100%', marginBottom:'0.5rem', fontSize:'0.65rem' }}>↻ Refresh</Btn>
+          <Btn variant="danger" onClick={logout} style={{ width:'100%', fontSize:'0.65rem' }}>⏻ Logout</Btn>
+        </div>
       </div>
 
-      <TableManager key={activeTable.key} table={activeTable} />
+      {/* Main content */}
+      <div style={{ flex:1, padding:'2rem', overflowY:'auto' }}>
+        <div style={{ maxWidth:'900px' }}>
+          <div style={{ marginBottom:'1.5rem' }}>
+            <h1 style={{ fontSize:'1.3rem', color: A.text, fontWeight:700, margin:0 }}>{activeTable.label}</h1>
+            <p style={{ fontSize:'0.75rem', color: A.dim, margin:'4px 0 0' }}>{stats[activeTable.key] ?? 0} records in this table</p>
+          </div>
+          <TableManager key={activeTable.key} table={activeTable} />
+        </div>
+      </div>
     </div>
   )
 }
