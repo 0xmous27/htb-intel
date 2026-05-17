@@ -1,23 +1,22 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-const CACHE_TTL = 60_000 // 60s
-const cache = {}
+const CACHE_TTL = 60_000
+const cache: Record<string, { rows: unknown[]; ts: number }> = {}
 
 /**
  * Fetch all rows from a Supabase table with in-memory cache (60s TTL).
  * Falls back to staticData if empty, error, or timeout (5s).
- * Returns { data, loading, stale }
  */
-export function useSupabaseData(table, staticData = []) {
+export function useSupabaseData<T = Record<string, unknown>>(table: string, staticData: T[] = []) {
   const cached = cache[table]
-  const [data, setData] = useState(cached?.rows || staticData)
+  const [data, setData] = useState<T[]>((cached?.rows as T[]) || staticData)
   const [loading, setLoading] = useState(!cached)
   const [stale, setStale] = useState(!cached)
 
   useEffect(() => {
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
-      setData(cached.rows)
+      setData(cached.rows as T[])
       setLoading(false)
       setStale(false)
       return
@@ -40,7 +39,7 @@ export function useSupabaseData(table, staticData = []) {
         clearTimeout(timeout)
         if (!error && rows && rows.length > 0) {
           cache[table] = { rows, ts: Date.now() }
-          setData(rows)
+          setData(rows as T[])
           setStale(false)
         } else {
           setData(staticData)
