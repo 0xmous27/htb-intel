@@ -124,11 +124,11 @@ function App() {
 
   return (
     <>
-      <MatrixRain />
-      <CrashText />
-      <div className="scanline" />
+      {!isAdmin && <MatrixRain />}
+      {!isAdmin && <CrashText />}
+      {!isAdmin && <div className="scanline" />}
       {isAdmin ? (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
           <Suspense fallback={<div style={{ padding: '2rem', color: '#888' }}>LOADING...</div>}>
             <AdminPanel />
           </Suspense>
