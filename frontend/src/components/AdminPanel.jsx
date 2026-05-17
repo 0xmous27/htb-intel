@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { createClient } from '@supabase/supabase-js'
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
-const SECURITY_ANSWER = import.meta.env.VITE_SECURITY_ANSWER
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 
 // Admin writes use service_role key (bypasses RLS) — never stored in git,
@@ -472,29 +470,22 @@ function TableManager({ table }) {
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 function Login({ onLogin }) {
-  const [step, setStep]   = useState(1)
-  const [pw, setPw]       = useState('')
-  const [ans, setAns]     = useState('')
   const [svcKey, setSvcKey] = useState('')
   const [err, setErr]     = useState('')
   const [shake, setShake] = useState(false)
 
   const doShake = msg => { setErr(msg); setShake(true); setTimeout(() => setShake(false), 400) }
 
-  const submitPw  = e => { e.preventDefault(); pw === ADMIN_PASSWORD ? (setStep(2), setErr('')) : doShake('Incorrect password') }
-  const submitAns = e => { e.preventDefault(); ans.trim() === SECURITY_ANSWER ? (setStep(3), setErr('')) : doShake('Incorrect answer') }
-  const submitKey = e => {
+  const submitKey = async e => {
     e.preventDefault()
-    // Validate it looks like a Supabase JWT (starts with eyJ)
     if (!svcKey.startsWith('eyJ') || svcKey.split('.').length !== 3) { doShake('Invalid service role key'); return }
+    // Verify the key actually works by attempting a read
+    const client = createClient(SUPABASE_URL, svcKey, { auth: { persistSession: false } })
+    const { error } = await client.from('techniques').select('id').limit(1)
+    if (error) { doShake('Key rejected by Supabase'); return }
     getAdminClient(svcKey)
     onLogin()
   }
-
-  const STEPS = { 1: { icon:'🔐', title:'ADMIN ACCESS', sub:'Step 1 of 3 — Password' },
-                  2: { icon:'🛡', title:'SECURITY CHECK', sub:'Step 2 of 3 — Security Question' },
-                  3: { icon:'🔑', title:'SERVICE KEY', sub:'Step 3 of 3 — Supabase Service Role Key' } }
-  const s = STEPS[step]
 
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'80vh' }}>
@@ -506,48 +497,20 @@ function Login({ onLogin }) {
         boxShadow: err ? '0 0 30px #ff333322' : '0 0 40px #00000099',
       }}>
         <div style={{ textAlign:'center', marginBottom:'2rem' }}>
-          <div style={{ fontSize:'2rem' }}>{s.icon}</div>
-          <div style={{ fontSize:'0.8rem', color:'var(--neon)', letterSpacing:'0.2em', marginTop:'0.5rem' }}>{s.title}</div>
-          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'3px' }}>{s.sub}</div>
+          <div style={{ fontSize:'2rem' }}>🔑</div>
+          <div style={{ fontSize:'0.8rem', color:'var(--neon)', letterSpacing:'0.2em', marginTop:'0.5rem' }}>ADMIN ACCESS</div>
+          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'3px' }}>Paste your Supabase service role key</div>
         </div>
 
-        {step === 1 && (
-          <form onSubmit={submitPw}>
-            <div style={{ marginBottom:'1rem' }}>
-              <div style={{ fontSize:'0.52rem', color:S.muted, marginBottom:'4px' }}>PASSWORD</div>
-              <Inp type="password" value={pw} onChange={setPw} placeholder="enter password" />
-            </div>
-            {err && <div style={{ fontSize:'0.6rem', color:'#ff3333', marginBottom:'0.75rem' }}>⚠ {err}</div>}
-            <Btn type="submit" style={{ width:'100%' }}>CONTINUE →</Btn>
-          </form>
-        )}
-        {step === 2 && (
-          <form onSubmit={submitAns}>
-            <div style={{ marginBottom:'1rem' }}>
-              <div style={{ fontSize:'0.6rem', color:'var(--neon)', marginBottom:'0.75rem', lineHeight:1.5 }}>What is your favorite?</div>
-              <Inp value={ans} onChange={setAns} placeholder="your answer" />
-            </div>
-            {err && <div style={{ fontSize:'0.6rem', color:'#ff3333', marginBottom:'0.75rem' }}>⚠ {err}</div>}
-            <div style={{ display:'flex', gap:'0.5rem' }}>
-              <Btn type="submit" style={{ flex:1 }}>CONTINUE →</Btn>
-              <Btn variant="ghost" onClick={() => { setStep(1); setErr('') }}>BACK</Btn>
-            </div>
-          </form>
-        )}
-        {step === 3 && (
-          <form onSubmit={submitKey}>
-            <div style={{ marginBottom:'1rem' }}>
-              <div style={{ fontSize:'0.52rem', color:S.muted, marginBottom:'4px' }}>SERVICE ROLE KEY</div>
-              <Inp type="password" value={svcKey} onChange={setSvcKey} placeholder="eyJhbGci..." />
-              <div style={{ fontSize:'0.5rem', color:'#333', marginTop:'4px' }}>Required for write access. Never stored — memory only.</div>
-            </div>
-            {err && <div style={{ fontSize:'0.6rem', color:'#ff3333', marginBottom:'0.75rem' }}>⚠ {err}</div>}
-            <div style={{ display:'flex', gap:'0.5rem' }}>
-              <Btn type="submit" style={{ flex:1 }}>AUTHENTICATE →</Btn>
-              <Btn variant="ghost" onClick={() => { setStep(2); setErr('') }}>BACK</Btn>
-            </div>
-          </form>
-        )}
+        <form onSubmit={submitKey}>
+          <div style={{ marginBottom:'1rem' }}>
+            <div style={{ fontSize:'0.52rem', color:S.muted, marginBottom:'4px' }}>SERVICE ROLE KEY</div>
+            <Inp type="password" value={svcKey} onChange={setSvcKey} placeholder="eyJhbGci..." />
+            <div style={{ fontSize:'0.5rem', color:'#333', marginTop:'4px' }}>Required for write access. Never stored — memory only.</div>
+          </div>
+          {err && <div style={{ fontSize:'0.6rem', color:'#ff3333', marginBottom:'0.75rem' }}>⚠ {err}</div>}
+          <Btn type="submit" style={{ width:'100%' }}>AUTHENTICATE →</Btn>
+        </form>
       </div>
     </div>
   )
