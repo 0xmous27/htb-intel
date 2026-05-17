@@ -308,6 +308,7 @@ function TableManager({ table }) {
   const [toast, setToast]     = useState(null)
   const [confirm, setConfirm] = useState(null)
   const [page, setPage]       = useState(0)
+  const [dupData, setDupData] = useState(null)
   const PAGE = 50
 
   const flash = (text, ok = true) => { setToast({ text, ok }); setTimeout(() => setToast(null), 2500) }
@@ -395,9 +396,9 @@ function TableManager({ table }) {
       {mode === 'add' && (
         <div style={{ border:'1px solid var(--neon)', padding:'1.25rem', marginBottom:'1rem', background:S.panel }}>
           <div style={{ fontSize:'0.6rem', color:'var(--neon)', marginBottom:'0.75rem', letterSpacing:'0.1em' }}>
-            NEW RECORD — {table.label}
+            {dupData ? '⧉ DUPLICATE RECORD' : 'NEW RECORD'} — {table.label}
           </div>
-          <RecordForm table={table} initial={null} onSave={save} onCancel={() => setMode(null)} saving={saving} />
+          <RecordForm table={table} initial={dupData} onSave={(rec) => { save(rec); setDupData(null) }} onCancel={() => { setMode(null); setDupData(null) }} saving={saving} />
         </div>
       )}
 
@@ -456,8 +457,10 @@ function TableManager({ table }) {
                 <div style={{ display:'flex', gap:'0.25rem', flexShrink:0 }}>
                   <Btn variant="ghost" onClick={() => { setMode(row.id); window.scrollTo(0, 0) }}
                     style={{ padding:'2px 8px', fontSize:'0.52rem' }}>✏ EDIT</Btn>
+                  <Btn variant="warn" onClick={() => { setDupData({...row, id: row.id + '-copy'}); setMode('add'); window.scrollTo(0, 0) }}
+                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>⧉ DUP</Btn>
                   <Btn variant="danger" onClick={() => setConfirm(row.id)}
-                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>🗑 DEL</Btn>
+                    style={{ padding:'2px 8px', fontSize:'0.52rem' }}>✕</Btn>
                 </div>
               </div>
             ))}
@@ -552,43 +555,34 @@ export default function AdminPanel() {
   if (!authed) return <Login onLogin={login} />
 
   return (
-    <div style={{ padding:'1.5rem', maxWidth:'1200px' }}>
+    <div style={{ padding:'1.5rem', maxWidth:'1200px', margin:'0 auto' }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
         marginBottom:'1.5rem', paddingBottom:'1rem', borderBottom:'1px solid #111' }}>
         <div>
-          <div style={{ fontSize:'0.85rem', color:'var(--neon)', letterSpacing:'0.15em' }}>⚙ ADMIN PANEL</div>
-          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'2px' }}>HTB Intel — Content Management System</div>
+          <div style={{ fontSize:'0.9rem', color:'var(--neon)', letterSpacing:'0.15em', fontWeight:700 }}>⚙ ADMIN PANEL</div>
+          <div style={{ fontSize:'0.52rem', color:S.muted, marginTop:'2px' }}>HTB Intel — Content Management • {Object.values(stats).reduce((a, b) => a + (b || 0), 0)} total records</div>
         </div>
         <div style={{ display:'flex', gap:'0.5rem', alignItems:'center' }}>
-          <Btn variant="ghost" onClick={loadStats} style={{ fontSize:'0.52rem', padding:'0.25rem 0.6rem' }}>↻ REFRESH STATS</Btn>
-          <Btn variant="ghost" onClick={logout}>LOGOUT</Btn>
+          <Btn variant="ghost" onClick={loadStats} style={{ fontSize:'0.52rem', padding:'0.25rem 0.6rem' }}>↻ REFRESH</Btn>
+          <Btn variant="danger" onClick={logout} style={{ fontSize:'0.52rem', padding:'0.25rem 0.6rem' }}>⏻ LOGOUT</Btn>
         </div>
       </div>
 
-      {/* Stats dashboard */}
-      <div style={{ display:'flex', flexWrap:'wrap', gap:'0.4rem', marginBottom:'1.5rem' }}>
+      {/* Stats dashboard — clickable cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(110px, 1fr))', gap:'0.4rem', marginBottom:'1.5rem' }}>
         {TABLES.map(t => (
           <div key={t.key}
             onClick={() => setActiveTable(t)}
-            style={{ background: activeTable.key === t.key ? '#0d0d0d' : S.panel,
+            style={{
+              background: activeTable.key === t.key ? 'rgba(0,255,153,0.03)' : S.panel,
               border:`1px solid ${activeTable.key === t.key ? 'var(--neon)' : '#111'}`,
-              padding:'0.5rem 0.9rem', minWidth:'80px', cursor:'pointer', transition:'all 0.15s' }}>
-            <div style={{ fontSize:'0.5rem', color: activeTable.key === t.key ? 'var(--neon)' : S.muted }}>{t.label}</div>
-            <div style={{ fontSize:'1rem', color:'var(--neon)', fontWeight:700 }}>{stats[t.key] ?? '—'}</div>
+              padding:'0.6rem 0.75rem', cursor:'pointer', transition:'all 0.15s',
+              borderLeft: activeTable.key === t.key ? '3px solid var(--neon)' : '3px solid transparent',
+            }}>
+            <div style={{ fontSize:'1.1rem', color: activeTable.key === t.key ? 'var(--neon)' : '#666', fontWeight:700 }}>{stats[t.key] ?? '—'}</div>
+            <div style={{ fontSize:'0.48rem', color: activeTable.key === t.key ? 'var(--neon)' : S.muted, marginTop:'2px', letterSpacing:'0.05em' }}>{t.label}</div>
           </div>
-        ))}
-      </div>
-
-      {/* Table tabs */}
-      <div style={{ display:'flex', flexWrap:'wrap', gap:'0.3rem', marginBottom:'1.25rem' }}>
-        {TABLES.map(t => (
-          <button key={t.key} onClick={() => setActiveTable(t)} style={{
-            background: activeTable.key === t.key ? '#0d0d0d' : 'none',
-            border:`1px solid ${activeTable.key === t.key ? 'var(--neon)' : '#1a1a1a'}`,
-            color: activeTable.key === t.key ? 'var(--neon)' : S.muted,
-            fontFamily:S.font, fontSize:'0.6rem', padding:'0.3rem 0.8rem', cursor:'pointer', transition:'all 0.15s',
-          }}>{t.label}</button>
         ))}
       </div>
 
