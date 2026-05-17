@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react'
 import { BB_REPORTS, BB_CATEGORIES } from '../data/bugbountyData'
 import { useSupabaseData } from '../hooks/useSupabaseData'

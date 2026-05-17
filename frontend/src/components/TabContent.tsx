@@ -22,7 +22,16 @@ const TemplateForge = lazy(() => import('./TemplateForge'))
 const TricksTab = lazy(() => import('./TricksTab'))
 const BugBountyTab = lazy(() => import('./BugBountyTab'))
 
-export default function TabContent({ tab, search, active, techniques, loading, TABS }) {
+interface TabContentProps {
+  tab: string
+  search: string
+  active: string | null
+  techniques: { id: string; name: string; command: string; purpose?: string; when_to_use?: string; tags?: string[] }[]
+  loading: boolean
+  TABS: { id: string; label: string }[]
+}
+
+export default function TabContent({ tab, search, active, techniques, loading, TABS }: TabContentProps) {
   return (
     <Suspense fallback={<div className="empty-state">LOADING...</div>}>
       {tab !== 'techniques' && (

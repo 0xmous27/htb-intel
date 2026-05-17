@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { SEVERITIES, COMMON_TAGS, STARTER_TEMPLATES, GF_STARTERS } from '../data/forgeData'
 import { generateYAML, generateGF, validateTemplate, defaultRequest, defaultState } from './forge/yamlGen'

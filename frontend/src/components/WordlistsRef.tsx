@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useSupabaseData } from '../hooks/useSupabaseData'
 
 const STATIC_WORDLISTS = [

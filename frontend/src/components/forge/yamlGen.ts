@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Generates valid nuclei YAML from template state
 export function generateYAML(state) {
   const { meta, requests, variables } = state

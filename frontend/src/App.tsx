@@ -33,9 +33,23 @@ const TABS = [
   { id: 'runner',     label: '😂 CATCH ME' },
 ]
 
+interface Technique {
+  id: string
+  name: string
+  command: string
+  purpose?: string
+  when_to_use?: string
+  tags?: string[]
+}
+
+interface Category {
+  category: string
+  techniques: Technique[]
+}
+
 function App() {
-  const [data, setData] = useState([])
-  const [active, setActive] = useState(null)
+  const [data, setData] = useState<Category[]>([])
+  const [active, setActive] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState('techniques')
   const isAdmin = window.location.pathname === '/admin'
@@ -91,7 +105,7 @@ function App() {
       ) : (
       <div className="app-layout" style={{ flexDirection: 'column' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <Sidebar categories={categories} active={active} onSelect={(cat) => { setActive(cat); setTab('techniques') }} search={search} onSearch={setSearch} />
+          <Sidebar categories={categories} active={active} onSelect={(cat: string) => { setActive(cat); setTab('techniques') }} search={search} onSearch={setSearch} />
           <div className="main-content">
             <TargetBar />
             <div className="tab-bar" style={{ flexWrap: 'wrap' }}>
