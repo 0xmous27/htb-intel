@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { TargetProvider } from './hooks/TargetContext'
+import { supabase } from './lib/supabase'
 import MatrixRain from './components/MatrixRain'
 import CrashText from './components/CrashText'
 import Sidebar from './components/Sidebar'
@@ -91,11 +92,22 @@ function App() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/techniques')
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
-      .catch(() => {
-        import('./data/techniques.json').then(m => { setData(m.default); setLoading(false) })
+    // Fetch techniques from Supabase, fall back to static JSON
+    supabase.from('techniques').select('*').order('created_at', { ascending: false })
+      .then(({ data: rows, error }) => {
+        if (!error && rows && rows.length > 0) {
+          // Group flat rows into {category, techniques:[...]}
+          const grouped: Record<string, Technique[]> = {}
+          for (const r of rows) {
+            const cat = r.category || 'Misc'
+            if (!grouped[cat]) grouped[cat] = []
+            grouped[cat].push({ id: r.id, name: r.name, command: r.command, purpose: r.purpose, when_to_use: r.when_to_use, tags: r.tags || [] })
+          }
+          setData(Object.entries(grouped).map(([category, techniques]) => ({ category, techniques })))
+          setLoading(false)
+        } else {
+          import('./data/techniques.json').then(m => { setData(m.default); setLoading(false) })
+        }
       })
   }, [])
 
