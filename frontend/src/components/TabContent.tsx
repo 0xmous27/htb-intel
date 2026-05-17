@@ -28,7 +28,7 @@ interface TabContentProps {
   active: string | null
   techniques: { id: string; name: string; command: string; purpose?: string; when_to_use?: string; tags?: string[] }[]
   loading: boolean
-  TABS: { id: string; label: string }[]
+  TABS: { id: string; label: string; group: string }[]
 }
 
 export default function TabContent({ tab, search, active, techniques, loading, TABS }: TabContentProps) {

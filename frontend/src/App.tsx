@@ -10,27 +10,32 @@ import Footer from './components/Footer'
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 const TABS = [
-  { id: 'techniques', label: '⚡ TECHNIQUES' },
-  { id: 'tools',      label: '🔧 TOOLS' },
-  { id: 'services',   label: '🌐 SERVICES' },
-  { id: 'oob',        label: '📡 OOB' },
-  { id: 'regex',      label: '⌥ REGEX' },
-  { id: 'payload',    label: '💉 PAYLOADS' },
-  { id: 'hash',       label: '🔐 HASH ID' },
-  { id: 'ports',      label: '🔌 PORTS' },
-  { id: 'wordlists',  label: '📦 WORDLISTS' },
-  { id: 'gtfo',       label: '🐚 GTFOBins' },
-  { id: 'cve',        label: '💀 CVEs' },
-  { id: 'loot',       label: '🎯 LOOT' },
-  { id: 'creds',      label: '🔑 CREDS' },
-  { id: 'checklist',  label: '📋 CHECKLIST' },
-  { id: 'notes',      label: '📝 NOTES' },
-  { id: 'cpts',       label: '🎓 CPTS' },
-  { id: 'forge',      label: '⚒ TEMPLATE FORGE' },
-  { id: 'tricks',     label: '🃏 TRICKS' },
-  { id: 'bugbounty',  label: '🐛 BUG BOUNTY' },
-  { id: 'game',       label: '🎮 HACK GAME' },
-  { id: 'runner',     label: '😂 CATCH ME' },
+  // ── ATTACK ──
+  { id: 'techniques', label: '⚡ TECHNIQUES', group: 'attack' },
+  { id: 'services',   label: '🌐 SERVICES', group: 'attack' },
+  { id: 'ports',      label: '🔌 PORTS', group: 'attack' },
+  { id: 'tools',      label: '🔧 TOOLS', group: 'attack' },
+  { id: 'payload',    label: '💉 PAYLOADS', group: 'attack' },
+  { id: 'oob',        label: '📡 BLIND / OOB', group: 'attack' },
+  { id: 'cve',        label: '💀 CVEs', group: 'attack' },
+  // ── CRACK ──
+  { id: 'hash',       label: '🔐 HASH ID', group: 'crack' },
+  { id: 'wordlists',  label: '📦 WORDLISTS', group: 'crack' },
+  { id: 'gtfo',       label: '🐚 GTFO', group: 'crack' },
+  { id: 'regex',      label: '🔍 REGEX', group: 'crack' },
+  // ── TRACK ──
+  { id: 'loot',       label: '🎯 LOOT', group: 'track' },
+  { id: 'creds',      label: '🔑 CREDS', group: 'track' },
+  { id: 'checklist',  label: '📋 CHECKLIST', group: 'track' },
+  { id: 'notes',      label: '📝 NOTES', group: 'track' },
+  // ── LEARN ──
+  { id: 'tricks',     label: '🃏 TRICKS', group: 'learn' },
+  { id: 'bugbounty',  label: '🐛 BUG BOUNTY', group: 'learn' },
+  { id: 'forge',      label: '⚒ FORGE', group: 'learn' },
+  { id: 'cpts',       label: '🎓 CPTS', group: 'learn' },
+  // ── FUN ──
+  { id: 'game',       label: '🎮 HACK GAME', group: 'fun' },
+  { id: 'runner',     label: '🏃 RUNNER', group: 'fun' },
 ]
 
 interface Technique {
@@ -112,19 +117,24 @@ function App() {
               {TABS.map((t, i) => {
                 const neon = getComputedStyle(document.documentElement).getPropertyValue('--neon').trim() || '#00ff99'
                 const lit = tabSweep === i
+                const prevGroup = i > 0 ? TABS[i - 1].group : t.group
+                const showDivider = i > 0 && t.group !== prevGroup
                 return (
-                  <button
-                    key={t.id}
-                    className={`tab-btn ${tab === t.id ? 'active' : ''}`}
-                    onClick={() => setTab(t.id)}
-                    style={lit ? {
-                      color: neon,
-                      borderBottomColor: neon,
-                      background: `${neon}12`,
-                      textShadow: `0 0 12px ${neon}, 0 0 24px ${neon}66`,
-                      boxShadow: `0 0 10px ${neon}33`,
-                    } : {}}
-                  >{t.label}</button>
+                  <>
+                    {showDivider && <span key={`div-${i}`} style={{ width: '1px', height: '16px', background: '#2a2a2a', margin: '0 4px', alignSelf: 'center' }} />}
+                    <button
+                      key={t.id}
+                      className={`tab-btn ${tab === t.id ? 'active' : ''}`}
+                      onClick={() => setTab(t.id)}
+                      style={lit ? {
+                        color: neon,
+                        borderBottomColor: neon,
+                        background: `${neon}12`,
+                        textShadow: `0 0 12px ${neon}, 0 0 24px ${neon}66`,
+                        boxShadow: `0 0 10px ${neon}33`,
+                      } : {}}
+                    >{t.label}</button>
+                  </>
                 )
               })}
             </div>
