@@ -4,7 +4,7 @@
 
 [![Live](https://img.shields.io/badge/live-htb--intel.vercel.app-00ff99?style=flat-square)](https://htb-intel.vercel.app)
 ![License](https://img.shields.io/badge/license-MIT-00ff99?style=flat-square)
-![Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20Supabase-00ccff?style=flat-square)
+![Stack](https://img.shields.io/badge/stack-React%20%2B%20TypeScript%20%2B%20Vite%20%2B%20Supabase-00ccff?style=flat-square)
 ![Made for](https://img.shields.io/badge/made%20for-HTB%20%2F%20CPTS%20%2F%20Bug%20Bounty-red?style=flat-square)
 
 ---
@@ -22,24 +22,26 @@ A cyberpunk-themed web platform giving instant access to pentest references, too
 | Tab | Description |
 |---|---|
 | ⚡ TECHNIQUES | 172+ curated attack techniques with live `{TARGET_IP}` injection |
-| 🔧 TOOLS | Common pentest tools with install + usage commands |
 | 🌐 SERVICES | 35+ services with attack vectors, CVEs, and enum commands |
-| 📡 OOB | Out-of-band payloads — blind SQLi, XXE, SSRF, CMDi |
-| ⌥ REGEX | grep / sed / awk / python regex reference |
-| 💉 PAYLOADS | Reverse shells + msfvenom for all platforms |
-| 🔐 HASH ID | Paste hash → get hashcat mode instantly |
 | 🔌 PORTS | Port reference with attack vectors |
-| 📦 WORDLISTS | SecLists reference with paths |
-| 🐚 GTFOBins | Linux/Windows privilege escalation binaries |
+| 🔧 TOOLS | Common pentest tools with install + usage commands |
+| 💉 PAYLOADS | Reverse shells, bind shells, web shells, encrypted shells + msfvenom |
+| 📡 BLIND / OOB | Out-of-band payloads — blind SQLi, XXE, SSRF, CMDi |
 | 💀 CVEs | Top CVEs with one-liner exploits + MSF modules |
+| 🏢 AD | Active Directory attack path — enum to Domain Admin |
+| 🔐 HASH ID | Paste hash → get hashcat mode instantly |
+| 📦 WORDLISTS | SecLists reference with paths + "which wordlist for what" guide |
+| 🐚 GTFO | Linux/Windows privilege escalation binaries |
+| ⚡ QUICK REF | One-liner cheat sheet — shells, transfers, enum, API testing |
+| 🔍 REGEX | grep / sed / awk / python regex reference |
 | 🎯 LOOT | Track flags, hashes, files per host |
 | 🔑 CREDS | Credentials vault with command injection |
-| 📋 CHECKLIST | Methodology checklists for 7 engagement types |
+| 📋 CHECKLIST | Methodology checklists for 5 engagement types |
 | 📝 NOTES | Auto-saving scratch pad |
-| 🎓 CPTS | CPTS exam guide — strategy, tips, checklists |
-| ⚒ TEMPLATE FORGE | Nuclei template builder + GF pattern builder |
 | 🃏 TRICKS | HackTricks / coffinxp / LostSec / tomnomnom tricks |
-| 🐛 BUG BOUNTY | 200+ real paid bug bounty reports ($800–$35,000) |
+| 🐛 BUG BOUNTY | 200+ real paid bug bounty reports + methodology |
+| ⚒ FORGE | Nuclei template builder + GF pattern builder |
+| 🎓 CPTS | CPTS exam guide — strategy, tips, checklists |
 | 🎮 HACK GAME | Terminal hacking mini-game |
 
 ---
@@ -48,9 +50,10 @@ A cyberpunk-themed web platform giving instant access to pentest references, too
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 18 + Vite + Tailwind |
+| Frontend | React 18 + TypeScript + Vite + Tailwind |
 | Database | Supabase (PostgreSQL) |
-| Hosting | Vercel |
+| Hosting | Vercel (auto-deploy on push) |
+| CI | GitHub Actions (test + build) |
 | Storage | localStorage (notes, creds, loot) |
 
 ---
@@ -70,17 +73,42 @@ npm run dev
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_KEY=your-public-key
-VITE_ADMIN_PASSWORD=your-admin-password
-VITE_SECURITY_ANSWER=your-security-answer
+VITE_SUPABASE_KEY=your-public-anon-key
+```
+
+### Scripts
+
+```bash
+npm run dev        # Start dev server
+npm run build      # Production build
+npm test           # Run tests (Vitest)
+npm run typecheck  # TypeScript check
 ```
 
 ---
 
 ## Admin Panel
 
-Hidden at `/admin` — 3-step login (password → security question → Supabase service role key).  
-Full CRUD for all 12 content types. Changes reflect live across all tabs.
+Hidden at `/admin` — single-step login with Supabase service role key.
+Full CRUD for all 14 content tables. Changes reflect live across all tabs.
+
+---
+
+## Architecture
+
+```
+Supabase DB (14 tables, RLS hardened)
+    ↓
+useSupabaseData hook (60s cache, 5s timeout)
+    ↓
+Components: static rich data + Supabase new entries
+    ↓
+22 tabs in 11×2 grid layout
+```
+
+- **Code-split:** Each tab lazy-loaded (initial bundle: 170KB)
+- **Data pattern:** Static data = rich base. Supabase adds new entries via admin.
+- **Security:** Anon key = read-only. Service role key = admin writes (never in bundle).
 
 ---
 
