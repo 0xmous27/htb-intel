@@ -18,12 +18,14 @@ const TABS = [
   { id: 'payload',    label: '💉 PAYLOADS', group: 'attack' },
   { id: 'oob',        label: '📡 BLIND / OOB', group: 'attack' },
   { id: 'cve',        label: '💀 CVEs', group: 'attack' },
+  { id: 'ad',         label: '🏢 AD', group: 'attack' },
   // ── CRACK ──
   { id: 'hash',       label: '🔐 HASH ID', group: 'crack' },
   { id: 'wordlists',  label: '📦 WORDLISTS', group: 'crack' },
   { id: 'gtfo',       label: '🐚 GTFO', group: 'crack' },
   { id: 'regex',      label: '🔍 REGEX', group: 'crack' },
   // ── TRACK ──
+  { id: 'quickref',   label: '⚡ QUICK REF', group: 'track' },
   { id: 'loot',       label: '🎯 LOOT', group: 'track' },
   { id: 'creds',      label: '🔑 CREDS', group: 'track' },
   { id: 'checklist',  label: '📋 CHECKLIST', group: 'track' },

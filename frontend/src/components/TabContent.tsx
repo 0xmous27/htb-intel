@@ -21,6 +21,8 @@ const LootTracker = lazy(() => import('./LootTracker'))
 const TemplateForge = lazy(() => import('./TemplateForge'))
 const TricksTab = lazy(() => import('./TricksTab'))
 const BugBountyTab = lazy(() => import('./BugBountyTab'))
+const ADTab = lazy(() => import('./ADTab'))
+const QuickRef = lazy(() => import('./QuickRef'))
 
 interface TabContentProps {
   tab: string
@@ -68,6 +70,8 @@ export default function TabContent({ tab, search, active, techniques, loading, T
       {tab === 'forge'     && <TemplateForge />}
       {tab === 'tricks'    && <TricksTab />}
       {tab === 'bugbounty' && <BugBountyTab />}
+      {tab === 'ad'        && <ADTab />}
+      {tab === 'quickref'  && <QuickRef />}
       {tab === 'game'      && <HackGame />}
       {tab === 'runner'    && <RunnerGame />}
     </Suspense>

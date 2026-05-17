@@ -192,8 +192,8 @@ body::after {
 }
 .tab-btn {
   background: none; border: none; border-bottom: 2px solid transparent;
-  color: #777; font-family: inherit; font-size: 0.65rem;
-  letter-spacing: 0.08em; padding: 0.5rem 1rem; cursor: pointer;
+  color: #777; font-family: inherit; font-size: 0.6rem;
+  letter-spacing: 0.06em; padding: 0.45rem 0.7rem; cursor: pointer;
   transition: all 0.15s; white-space: nowrap;
 }
 .tab-btn:hover { color: var(--neon-dim); background: rgba(0,0,0,0.1); }
