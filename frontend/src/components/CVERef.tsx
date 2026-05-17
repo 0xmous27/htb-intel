@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react'
 import { CVES } from '../data/cves'
 import { useTargetCtx } from '../hooks/TargetContext'

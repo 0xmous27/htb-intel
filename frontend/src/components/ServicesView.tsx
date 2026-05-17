@@ -2,23 +2,39 @@ import { useState } from 'react'
 import { SERVICES } from '../data/services'
 import { useSupabaseData } from '../hooks/useSupabaseData'
 
-// Static data is grouped: [{category, services:[...]}]
-// Supabase rows are flat: {id, name, port, protocol, description, enum_cmd, attacks, cves_list, notes, tags}
-const STATIC_FLAT = SERVICES.flatMap(g => g.services.map(s => ({ ...s, _group: g.category })))
+interface Service {
+  id?: string
+  name: string
+  port?: string
+  protocol?: string
+  description?: string
+  enum_cmd?: string
+  attacks?: string | string[]
+  cves_list?: string
+  notes?: string
+  tags?: string[]
+  category?: string
+  _group?: string
+  // static shape fields
+  desc?: string
+  proto?: string
+  cves?: string[]
+  tools?: string[]
+}
 
-function normSvc(s) {
-  if (s.enum_cmd !== undefined || s.attacks !== undefined) {
-    // supabase shape
-    const attacks = s.attacks ? s.attacks.split('\n').filter(Boolean) : []
+const STATIC_FLAT: Service[] = (SERVICES as any[]).flatMap(g => g.services.map((s: any) => ({ ...s, _group: g.category })))
+
+function normSvc(s: Service): any {
+  if (s.enum_cmd !== undefined || (typeof s.attacks === 'string')) {
+    const attacks = typeof s.attacks === 'string' ? s.attacks.split('\n').filter(Boolean) : (s.attacks || [])
     const cves    = s.cves_list ? s.cves_list.split('\n').filter(Boolean) : []
     const tools   = Array.isArray(s.tags) ? s.tags : []
     return { ...s, desc: s.description || '', attacks, cves, tools, proto: s.protocol || '', notes: s.notes || '' }
   }
-  // static shape already has attacks[], cves[], tools[]
   return s
 }
 
-function ServiceCard({ svc }) {
+function ServiceCard({ svc }: { svc: Service }) {
   const [open, setOpen] = useState(false)
   const s = normSvc(svc)
 
@@ -52,7 +68,7 @@ function ServiceCard({ svc }) {
               <div>
                 <div className="meta-label" style={{ marginBottom: '0.4rem' }}>⚔ ATTACK VECTORS</div>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {s.attacks.map((a, i) => (
+                  {s.attacks.map((a: string, i: number) => (
                     <li key={i} style={{ fontSize: '0.7rem', color: '#ccc', padding: '2px 0', borderLeft: '2px solid #ff333355', paddingLeft: '0.5rem', marginBottom: '3px' }}>{a}</li>
                   ))}
                 </ul>
@@ -64,7 +80,7 @@ function ServiceCard({ svc }) {
                 <>
                   <div className="meta-label" style={{ marginBottom: '0.4rem' }}>🔴 NOTABLE CVEs</div>
                   <ul style={{ listStyle: 'none', padding: 0, marginBottom: '0.75rem' }}>
-                    {s.cves.map((c, i) => <li key={i} style={{ fontSize: '0.68rem', color: '#ff6666', padding: '2px 0' }}>{c}</li>)}
+                    {s.cves.map((c: string, i: number) => <li key={i} style={{ fontSize: '0.68rem', color: '#ff6666', padding: '2px 0' }}>{c}</li>)}
                   </ul>
                 </>
               )}
@@ -72,7 +88,7 @@ function ServiceCard({ svc }) {
                 <>
                   <div className="meta-label" style={{ marginBottom: '0.4rem' }}>🔧 TOOLS</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                    {s.tools.map(t => <span key={t} className="tag" style={{ borderColor: 'var(--neon-dim)', color: 'var(--neon)' }}>{t}</span>)}
+                    {s.tools.map((t: string) => <span key={t} className="tag" style={{ borderColor: 'var(--neon-dim)', color: 'var(--neon)' }}>{t}</span>)}
                   </div>
                 </>
               )}
@@ -91,18 +107,17 @@ function ServiceCard({ svc }) {
   )
 }
 
-export default function ServicesView({ search }) {
-  const { data: dbServices } = useSupabaseData('services', STATIC_FLAT)
+export default function ServicesView({ search }: { search: string }) {
+  const { data: dbServices } = useSupabaseData<Service>('services', STATIC_FLAT)
 
   const q = (search || '').toLowerCase()
 
-  // Group by category (_group for static, or category field for supabase)
-  const grouped = dbServices.reduce((acc, s) => {
+  const grouped: Record<string, Service[]> = {}
+  for (const s of dbServices) {
     const cat = s._group || s.category || 'Services'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(s)
-    return acc
-  }, {})
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(s)
+  }
 
   const entries = Object.entries(grouped).map(([cat, services]) => ({
     category: cat,
@@ -110,8 +125,8 @@ export default function ServicesView({ search }) {
       if (!q) return true
       const n = normSvc(s)
       return n.name.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q) ||
-        (n.attacks || []).some(a => a.toLowerCase().includes(q)) ||
-        (n.tools || []).some(t => t.toLowerCase().includes(q)) ||
+        (n.attacks || []).some((a: string) => a.toLowerCase().includes(q)) ||
+        (n.tools || []).some((t: string) => t.toLowerCase().includes(q)) ||
         cat.toLowerCase().includes(q)
     })
   })).filter(g => g.services.length > 0)

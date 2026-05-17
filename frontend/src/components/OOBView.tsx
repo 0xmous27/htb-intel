@@ -3,10 +3,23 @@ import { OOB_TECHNIQUES } from '../data/oob'
 import { useTargetCtx } from '../hooks/TargetContext'
 import { useSupabaseData } from '../hooks/useSupabaseData'
 
-// Static shape: [{category, when, setup, desc, techniques:[{name,desc,cmd,note}]}]
-// Supabase shape: {id, category, title, description, when_to_use, setup, payload, note, tags}
-const STATIC_FLAT = OOB_TECHNIQUES.flatMap(g =>
-  g.techniques.map(t => ({
+interface OOBItem {
+  id?: string
+  category?: string
+  title?: string
+  name?: string
+  description?: string
+  when_to_use?: string
+  setup?: string
+  payload?: string
+  cmd?: string
+  note?: string
+  tags?: string[]
+  _group_desc?: string
+}
+
+const STATIC_FLAT: OOBItem[] = (OOB_TECHNIQUES as any[]).flatMap(g =>
+  g.techniques.map((t: any) => ({
     id: t.name,
     category: g.category,
     title: t.name,
@@ -20,7 +33,7 @@ const STATIC_FLAT = OOB_TECHNIQUES.flatMap(g =>
   }))
 )
 
-function CopyBtn({ text }) {
+function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1200) }
   return (
@@ -28,7 +41,7 @@ function CopyBtn({ text }) {
   )
 }
 
-function OOBCard({ item }) {
+function OOBCard({ item }: { item: OOBItem }) {
   const { inject } = useTargetCtx()
   const cmd = item.payload || item.cmd || ''
   const filled = inject(cmd)
@@ -75,7 +88,7 @@ function OOBCard({ item }) {
   )
 }
 
-function OOBGroup({ category, items }) {
+function OOBGroup({ category, items }: { category: string; items: OOBItem[] }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={`technique-card ${open ? 'open' : ''}`} style={{ marginBottom: '0.5rem', borderColor: open ? 'rgba(255,102,0,0.3)' : '' }}>
@@ -95,8 +108,8 @@ function OOBGroup({ category, items }) {
   )
 }
 
-export default function OOBView({ search }) {
-  const { data: rows } = useSupabaseData('oob_payloads', STATIC_FLAT)
+export default function OOBView({ search }: { search: string }) {
+  const { data: rows } = useSupabaseData<OOBItem>('oob_payloads', STATIC_FLAT)
 
   const q = (search || '').toLowerCase()
   const filtered = rows.filter(r =>
@@ -107,13 +120,12 @@ export default function OOBView({ search }) {
     (r.payload || '').toLowerCase().includes(q)
   )
 
-  // Group by category
-  const grouped = filtered.reduce((acc, r) => {
+  const grouped: Record<string, OOBItem[]> = {}
+  for (const r of filtered) {
     const cat = r.category || 'OOB'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(r)
-    return acc
-  }, {})
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(r)
+  }
 
   return (
     <div>
@@ -123,7 +135,7 @@ export default function OOBView({ search }) {
         {'  '}<span style={{ color: '#aaa' }}>Set up interactsh or Burp Collaborator before testing.</span>
       </div>
       {Object.entries(grouped).map(([cat, items]) => (
-        <OOBGroup key={cat} category={cat} items={items} />
+        <OOBGroup key={cat} category={cat} items={items as OOBItem[]} />
       ))}
     </div>
   )
