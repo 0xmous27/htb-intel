@@ -128,14 +128,10 @@ function App() {
       <CrashText />
       <div className="scanline" />
       {isAdmin ? (
-        <div className="app-layout" style={{ flexDirection: 'column' }}>
-          <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-            <div className="main-content">
-              <Suspense fallback={<div className="empty-state">LOADING...</div>}>
-                <AdminPanel />
-              </Suspense>
-            </div>
-          </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
+          <Suspense fallback={<div style={{ padding: '2rem', color: '#888' }}>LOADING...</div>}>
+            <AdminPanel />
+          </Suspense>
         </div>
       ) : (
       <div className="app-layout" style={{ flexDirection: 'column' }}>
