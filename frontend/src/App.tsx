@@ -70,7 +70,6 @@ function App() {
   const isAdmin = window.location.pathname === '/admin'
   const [loading, setLoading] = useState(true)
   const [tabSweep, setTabSweep] = useState(-1)
-  const [moreOpen, setMoreOpen] = useState(false)
 
   useEffect(() => {
     const total = TABS.length
@@ -103,11 +102,7 @@ function App() {
     return list
   }, [data, active, search])
 
-  // Split tabs: main (attack+crack+track) vs more (learn+fun)
-  const mainTabs = TABS.filter(t => ['attack', 'crack', 'track'].includes(t.group))
-  const moreTabs = TABS.filter(t => ['learn', 'fun'].includes(t.group))
-  const activeInMore = moreTabs.some(t => t.id === tab)
-
+  // All tabs visible
   const renderTabBtn = (t: typeof TABS[0], i: number, arr: typeof TABS) => {
     const neon = getComputedStyle(document.documentElement).getPropertyValue('--neon').trim() || '#00ff99'
     const globalIdx = TABS.findIndex(x => x.id === t.id)
@@ -119,7 +114,7 @@ function App() {
         {showDivider && <span style={{ width: '1px', height: '16px', background: '#2a2a2a', margin: '0 4px', alignSelf: 'center' }} />}
         <button
           className={`tab-btn ${tab === t.id ? 'active' : ''}`}
-          onClick={() => { setTab(t.id); setMoreOpen(false) }}
+          onClick={() => setTab(t.id)}
           style={lit ? {
             color: neon,
             borderBottomColor: neon,
@@ -160,29 +155,9 @@ function App() {
                 return <span key={key} style={{ color: isActive ? 'var(--neon)' : '#333', opacity: isActive ? 0.6 : 1 }}>{label}</span>
               })}
             </div>
-            {/* Tab bar — main tabs always visible */}
+            {/* Tab bar — all tabs visible */}
             <div className="tab-bar" style={{ flexWrap: 'wrap', position: 'relative' }}>
-              {mainTabs.map((t, i, arr) => renderTabBtn(t, i, arr))}
-              {/* #1 — MORE dropdown for LEARN + FUN */}
-              <span style={{ position: 'relative', display: 'inline-flex', alignSelf: 'center' }}>
-                <button
-                  className={`tab-btn ${activeInMore ? 'active' : ''}`}
-                  onClick={() => setMoreOpen(o => !o)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  {activeInMore ? TABS.find(t => t.id === tab)?.label : '▾ MORE'}
-                </button>
-                {moreOpen && (
-                  <div style={{
-                    position: 'absolute', top: '100%', right: 0, zIndex: 100,
-                    background: '#0a0a0a', border: '1px solid #1a1a1a',
-                    padding: '0.4rem', minWidth: '160px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
-                  }}>
-                    {moreTabs.map((t, i, arr) => renderTabBtn(t, i, arr))}
-                  </div>
-                )}
-              </span>
+              {TABS.map((t, i, arr) => renderTabBtn(t, i, arr))}
             </div>
             <div className="content-area">
               <TabContent tab={tab} search={search} active={active} techniques={techniques} loading={loading} TABS={TABS} />
