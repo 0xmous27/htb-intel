@@ -571,7 +571,7 @@ export default function AdminPanel() {
   if (!authed) return <Login onLogin={login} />
 
   return (
-    <div style={{ display:'flex', minHeight:'100vh', background: A.bg }}>
+    <div style={{ display:'flex', height:'100vh', background: A.bg }}>
       {/* Sidebar */}
       <div style={{ width:'220px', background:'#090909', borderRight:`1px solid ${A.border}`, padding:'1.25rem 0', flexShrink:0, overflowY:'auto' }}>
         <div style={{ padding:'0 1rem 1rem', borderBottom:`1px solid ${A.border}`, marginBottom:'0.75rem' }}>
