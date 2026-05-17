@@ -3,31 +3,10 @@ import { TargetProvider } from './hooks/TargetContext'
 import MatrixRain from './components/MatrixRain'
 import CrashText from './components/CrashText'
 import Sidebar from './components/Sidebar'
-import TechniqueCard from './components/TechniqueCard'
 import TargetBar from './components/TargetBar'
+import TabContent from './components/TabContent'
 import Footer from './components/Footer'
 
-// Lazy-loaded tab components
-const ToolsView = lazy(() => import('./components/ToolsView'))
-const ServicesView = lazy(() => import('./components/ServicesView'))
-const RegexView = lazy(() => import('./components/RegexView'))
-const OOBView = lazy(() => import('./components/OOBView'))
-const CredsVault = lazy(() => import('./components/CredsVault'))
-const NotesTab = lazy(() => import('./components/NotesTab'))
-const ChecklistTab = lazy(() => import('./components/ChecklistTab'))
-const PayloadGen = lazy(() => import('./components/PayloadGen'))
-const HashID = lazy(() => import('./components/HashID'))
-const WordlistsRef = lazy(() => import('./components/WordlistsRef'))
-const PortRef = lazy(() => import('./components/PortRef'))
-const HackGame = lazy(() => import('./components/HackGame'))
-const RunnerGame = lazy(() => import('./components/EscapeLogin'))
-const CPTSGuide = lazy(() => import('./components/CPTSGuide'))
-const GTFOBins = lazy(() => import('./components/GTFOBins'))
-const CVERef = lazy(() => import('./components/CVERef'))
-const LootTracker = lazy(() => import('./components/LootTracker'))
-const TemplateForge = lazy(() => import('./components/TemplateForge'))
-const TricksTab = lazy(() => import('./components/TricksTab'))
-const BugBountyTab = lazy(() => import('./components/BugBountyTab'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
 const TABS = [
@@ -65,7 +44,6 @@ function App() {
 
   useEffect(() => {
     const total = TABS.length
-    // Run sweep once on load, then stop
     let i = 0
     const step = setInterval(() => {
       setTabSweep(i)
@@ -137,44 +115,7 @@ function App() {
               })}
             </div>
             <div className="content-area">
-              <Suspense fallback={<div className="empty-state">LOADING...</div>}>
-              {tab !== 'techniques' && (
-                <div className="content-header">
-                  <span className="content-title">{TABS.find(t => t.id === tab)?.label.replace(/^\S+\s/, '')}</span>
-                </div>
-              )}
-              {tab === 'techniques' && (
-                <>
-                  <div className="content-header">
-                    <span className="content-title">{active ?? 'ALL TECHNIQUES'}</span>
-                    <span className="content-count">{techniques.length} techniques</span>
-                  </div>
-                  {loading && <div className="empty-state">LOADING...</div>}
-                  {!loading && techniques.length === 0 && <div className="empty-state">NO TECHNIQUES FOUND</div>}
-                  {techniques.map(t => <TechniqueCard key={t.id} technique={t} />)}
-                </>
-              )}
-              {tab === 'tools'     && <ToolsView search={search} />}
-              {tab === 'services'  && <ServicesView search={search} />}
-              {tab === 'oob'       && <OOBView search={search} />}
-              {tab === 'regex'     && <RegexView search={search} />}
-              {tab === 'payload'   && <PayloadGen />}
-              {tab === 'hash'      && <HashID />}
-              {tab === 'ports'     && <PortRef />}
-              {tab === 'wordlists' && <WordlistsRef />}
-              {tab === 'gtfo'      && <GTFOBins />}
-              {tab === 'cve'       && <CVERef />}
-              {tab === 'loot'      && <LootTracker />}
-              {tab === 'creds'     && <CredsVault />}
-              {tab === 'checklist' && <ChecklistTab />}
-              {tab === 'notes'     && <NotesTab />}
-              {tab === 'cpts'      && <CPTSGuide />}
-              {tab === 'forge'     && <TemplateForge />}
-              {tab === 'tricks'    && <TricksTab />}
-              {tab === 'bugbounty' && <BugBountyTab />}
-              {tab === 'game'      && <HackGame />}
-              {tab === 'runner'    && <RunnerGame />}
-              </Suspense>
+              <TabContent tab={tab} search={search} active={active} techniques={techniques} loading={loading} TABS={TABS} />
             </div>
           </div>
         </div>
