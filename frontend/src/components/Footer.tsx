@@ -17,8 +17,8 @@ export default function Footer() {
   const neon = useNeon()
   const [quote] = useState(() => QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length])
   const [time, setTime] = useState(new Date().toLocaleTimeString())
-  const [visitors, setVisitors] = useState(null)
-  const [welcome, setWelcome] = useState(null)
+  const [visitors, setVisitors] = useState<number | null>(null)
+  const [welcome, setWelcome] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000)

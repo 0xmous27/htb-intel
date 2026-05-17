@@ -1,9 +1,18 @@
 import { useState } from 'react'
 import { useTargetCtx } from '../hooks/TargetContext'
 
-const isEvasion = (tags) => tags?.includes('evasion')
+interface Technique {
+  id: string
+  name: string
+  command: string
+  purpose?: string
+  when_to_use?: string
+  tags?: string[]
+}
 
-function renderCommand(command, inject) {
+const isEvasion = (tags?: string[]) => tags?.includes('evasion')
+
+function renderCommand(command: string, inject: (s: string) => string) {
   const filled = inject(command)
   return filled.split(/(\{[A-Z_]+\})/g).map((part, i) =>
     /^\{[A-Z_]+\}$/.test(part)
@@ -12,7 +21,7 @@ function renderCommand(command, inject) {
   )
 }
 
-export default function TechniqueCard({ technique }) {
+export default function TechniqueCard({ technique }: { technique: Technique }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const { inject } = useTargetCtx()

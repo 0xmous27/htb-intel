@@ -1,6 +1,7 @@
 import { useTargetCtx } from '../hooks/TargetContext'
+import { TargetState } from '../hooks/useTarget'
 
-const FIELDS = [
+const FIELDS: { key: keyof TargetState; placeholder: string }[] = [
   { key: 'TARGET_IP', placeholder: '10.10.10.1' },
   { key: 'TARGET_DOMAIN', placeholder: 'corp.local' },
   { key: 'USERNAME', placeholder: 'administrator' },

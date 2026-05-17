@@ -3,11 +3,12 @@ import { useEffect, useRef } from 'react'
 const CHARS = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン{}[]<>/\\|!@#$%^&*'
 
 export default function MatrixRain() {
-  const canvasRef = useRef(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
     let w = canvas.width = window.innerWidth
     let h = canvas.height = window.innerHeight
     const fontSize = 13
@@ -34,8 +35,8 @@ export default function MatrixRain() {
 
     const interval = setInterval(draw, 40)
     const resize = () => {
-      w = canvas.width = window.innerWidth
-      h = canvas.height = window.innerHeight
+      w = canvas!.width = window.innerWidth
+      h = canvas!.height = window.innerHeight
       cols = Math.floor(w / fontSize)
       drops = Array(cols).fill(0).map(() => Math.random() * -50)
     }
