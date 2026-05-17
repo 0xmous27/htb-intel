@@ -176,3 +176,25 @@ alter table oob_payloads add column if not exists setup       text;
 alter table oob_payloads add column if not exists note        text;
 alter table checklists   add column if not exists phase       text;
 alter table gtfobins     add column if not exists os          text;
+
+-- ── Visitor counter ───────────────────────────────────────────────────────────
+create table if not exists site_stats (
+  id text primary key default 'global',
+  visits bigint not null default 0
+);
+
+-- Seed the row
+insert into site_stats (id, visits) values ('global', 0) on conflict do nothing;
+
+-- RPC to atomically increment and return count
+create or replace function increment_visits()
+returns bigint language sql security definer as $$
+  update site_stats set visits = visits + 1 where id = 'global' returning visits;
+$$;
+
+-- RLS: anon can select but not write directly
+alter table site_stats enable row level security;
+create policy "sel_site_stats" on site_stats for select using (true);
+create policy "ins_site_stats" on site_stats for insert with check (false);
+create policy "upd_site_stats" on site_stats for update using (false);
+create policy "del_site_stats" on site_stats for delete using (false);

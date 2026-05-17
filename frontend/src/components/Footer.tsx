@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNeon } from '../hooks/ThemeContext'
+import { supabase } from '../lib/supabase'
 
 const QUOTES = [
   '"The quieter you become, the more you are able to hear." — Kali Linux',
@@ -26,8 +27,9 @@ export default function Footer() {
   }, [])
 
   useEffect(() => {
-    fetch('https://api.countapi.xyz/hit/htb-intel.vercel.app/visits')
-      .then(r => r.json()).then(d => setVisitors(d.value)).catch(() => {})
+    supabase.rpc('increment_visits').then(({ data }) => {
+      if (data) setVisitors(Number(data))
+    })
     // Name is now set during PillChoice — just show welcome back
     const stored = localStorage.getItem('htb-intel-name')
     if (stored) {
