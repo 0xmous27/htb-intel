@@ -42,7 +42,7 @@ body {
 .cmd-block .cmd-path { color: #00ccff; }
 .cmd-block .cmd-string { color: #ffcc00; }
 .cmd-block .cmd-comment { color: #555; font-style: italic; }
-.cmd-block .cmd-placeholder { color: var(--neon); background: rgba(0,255,153,0.08); padding: 0 2px; border-radius: 1px; }
+.cmd-block .cmd-placeholder { color: #ff9900; background: rgba(255,153,0,0.08); padding: 0 2px; border-radius: 1px; text-shadow: 0 0 6px #ff990044; }
 .cmd-block .cmd-prompt { color: #555; user-select: none; }
 
 /* ── Matrix canvas ── */
