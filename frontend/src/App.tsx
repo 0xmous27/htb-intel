@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar'
 import TargetBar from './components/TargetBar'
 import TabContent from './components/TabContent'
 import Footer from './components/Footer'
+import CopyHistory, { initCopyTracker } from './components/CopyHistory'
 
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
 
@@ -61,6 +62,22 @@ function App() {
   const isAdmin = window.location.pathname === '/admin'
   const [loading, setLoading] = useState(true)
   const [tabSweep, setTabSweep] = useState(-1)
+
+  // #10 — Track all copied commands
+  useEffect(() => { initCopyTracker() }, [])
+
+  // #3 — Keyboard shortcuts: 1-9 for tabs, / for search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === '/') { e.preventDefault(); document.querySelector<HTMLInputElement>('.sidebar-search input')?.focus() }
+      const num = parseInt(e.key)
+      if (num >= 1 && num <= 9) setTab(TABS[num - 1]?.id || tab)
+      if (e.key === '0') setTab(TABS[9]?.id || tab)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [tab])
 
   useEffect(() => {
     const total = TABS.length
@@ -141,6 +158,7 @@ function App() {
             </div>
           </div>
         </div>
+        <CopyHistory />
         <Footer />
       </div>
       )}
