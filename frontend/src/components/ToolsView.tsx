@@ -3,10 +3,20 @@ import { TOOLS } from '../data/tools'
 import { useTargetCtx } from '../hooks/TargetContext'
 import { useSupabaseData } from '../hooks/useSupabaseData'
 
-// Flatten static grouped data for fallback comparison
-const STATIC_FLAT = TOOLS.flatMap(g => g.tools.map(t => ({ ...t, category: g.category })))
+interface Tool {
+  id?: string
+  name: string
+  category?: string
+  description?: string
+  desc?: string
+  install?: string
+  usage?: string
+  use?: string
+}
 
-function ToolCard({ tool }) {
+const STATIC_FLAT: Tool[] = TOOLS.flatMap((g: any) => g.tools.map((t: any) => ({ ...t, category: g.category })))
+
+function ToolCard({ tool }: { tool: Tool }) {
   const [copied, setCopied] = useState(false)
   const { inject } = useTargetCtx()
   const usage = tool.usage || tool.use || ''
@@ -51,16 +61,15 @@ function ToolCard({ tool }) {
   )
 }
 
-export default function ToolsView({ search }) {
-  const { data: dbTools } = useSupabaseData('tools', STATIC_FLAT)
+export default function ToolsView({ search }: { search: string }) {
+  const { data: dbTools } = useSupabaseData<Tool>('tools', STATIC_FLAT)
 
-  // Group by category
-  const grouped = dbTools.reduce((acc, t) => {
+  const grouped: Record<string, Tool[]> = {}
+  for (const t of dbTools) {
     const cat = t.category || 'Misc'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(t)
-    return acc
-  }, {})
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(t)
+  }
 
   const q = (search || '').toLowerCase()
   const entries = Object.entries(grouped).map(([cat, tools]) => ({

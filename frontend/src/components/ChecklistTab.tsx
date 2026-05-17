@@ -4,13 +4,15 @@ import { useSupabaseData } from '../hooks/useSupabaseData'
 
 const STORAGE_KEY = 'htb_checklist_state'
 
-function loadState() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {} } catch { return {} }
+interface Phase { phase: string; items: string[] }
+interface Checklist { name: string; icon: string; _dbId?: string; steps: Phase[] }
+
+function loadState(): Record<string, boolean> {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
 }
 
-// Convert supabase checklist row to the shape ChecklistTab expects
-function dbToChecklist(row) {
-  const items = (row.items || '').split('\n').map(s => s.trim()).filter(Boolean)
+function dbToChecklist(row: any): Checklist {
+  const items = (row.items || '').split('\n').map((s: string) => s.trim()).filter(Boolean)
   return {
     name: row.title,
     icon: '📋',
@@ -19,7 +21,10 @@ function dbToChecklist(row) {
   }
 }
 
-function ChecklistView({ list, checked, toggle, resetList }) {
+function ChecklistView({ list, checked, toggle, resetList }: {
+  list: Checklist; checked: Record<string, boolean>
+  toggle: (key: string) => void; resetList: (name: string) => void
+}) {
   const totalItems = list.steps.reduce((s, p) => s + p.items.length, 0)
   const doneItems  = list.steps.reduce((s, p) => s + p.items.filter(item => checked[`${list.name}|${item}`]).length, 0)
   const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0
@@ -73,13 +78,13 @@ function ChecklistView({ list, checked, toggle, resetList }) {
 
 export default function ChecklistTab() {
   const [active, setActive] = useState(0)
-  const [checked, setChecked] = useState(loadState)
+  const [checked, setChecked] = useState<Record<string, boolean>>(loadState)
 
   const { data: dbRows } = useSupabaseData('checklists', [])
   const dbChecklists = dbRows.map(dbToChecklist)
-  const allLists = [...CHECKLISTS, ...dbChecklists]
+  const allLists: Checklist[] = [...(CHECKLISTS as Checklist[]), ...dbChecklists]
 
-  const toggle = (key) => {
+  const toggle = (key: string) => {
     setChecked(p => {
       const next = { ...p, [key]: !p[key] }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -87,7 +92,7 @@ export default function ChecklistTab() {
     })
   }
 
-  const resetList = (listName) => {
+  const resetList = (listName: string) => {
     setChecked(p => {
       const next = { ...p }
       Object.keys(next).forEach(k => { if (k.startsWith(listName + '|')) delete next[k] })

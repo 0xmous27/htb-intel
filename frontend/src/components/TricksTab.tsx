@@ -4,14 +4,25 @@ import { useSupabaseData } from '../hooks/useSupabaseData'
 
 const neon = 'var(--neon)'
 
-const SRC_COLOR = {
+interface Trick {
+  id: string
+  category: string
+  title: string
+  source?: string
+  description?: string
+  desc?: string
+  cmd?: string
+  tags?: string[] | string
+}
+
+const SRC_COLOR: Record<string, string> = {
   HackTricks: '#ff6600',
   'coffinxp / LostSec': neon,
   community: '#00ccff',
   'tomnomnom / community': '#cc88ff',
 }
 
-function CopyBtn({ text }) {
+function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500) }
   return (
@@ -22,12 +33,12 @@ function CopyBtn({ text }) {
   )
 }
 
-function TrickCard({ trick }) {
+function TrickCard({ trick }: { trick: Trick }) {
   const [open, setOpen] = useState(false)
-  const srcColor = SRC_COLOR[trick.source] || '#888'
+  const srcColor = SRC_COLOR[trick.source || ''] || '#888'
   const desc = trick.description || trick.desc || ''
   const cmd  = trick.cmd || ''
-  const tags = Array.isArray(trick.tags) ? trick.tags : (trick.tags ? trick.tags.split(',').map(t => t.trim()) : [])
+  const tags: string[] = Array.isArray(trick.tags) ? trick.tags : (trick.tags ? trick.tags.split(',').map(t => t.trim()) : [])
 
   return (
     <div style={{ border: '1px solid #111', marginBottom: '0.4rem', background: '#050505' }}>
@@ -60,7 +71,7 @@ export default function TricksTab() {
   const [cat, setCat] = useState('ALL')
   const [search, setSearch] = useState('')
 
-  const { data: tricks } = useSupabaseData('tricks', TRICKS)
+  const { data: tricks } = useSupabaseData<Trick>('tricks', TRICKS as Trick[])
   const categories = [...new Set(tricks.map(t => t.category))].sort()
 
   const filtered = tricks.filter(t => {
@@ -68,7 +79,7 @@ export default function TricksTab() {
     const q = search.toLowerCase()
     const desc = t.description || t.desc || ''
     const matchSearch = !q || t.title.toLowerCase().includes(q) || desc.toLowerCase().includes(q) ||
-      (Array.isArray(t.tags) ? t.tags : []).some(tag => tag.includes(q))
+      (Array.isArray(t.tags) ? t.tags : []).some((tag: string) => tag.includes(q))
     return matchCat && matchSearch
   })
 
