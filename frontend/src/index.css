@@ -181,9 +181,9 @@ body::after {
 
 /* ── Tab bar ── */
 .tab-bar {
-  display: flex; border-bottom: 1px solid #0d0d0d;
+  display: grid; border-bottom: 1px solid #0d0d0d;
   background: rgba(8,8,8,0.97); backdrop-filter: blur(20px);
-  flex-wrap: wrap; position: relative;
+  position: relative;
 }
 .tab-bar::after {
   content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
@@ -192,9 +192,9 @@ body::after {
 }
 .tab-btn {
   background: none; border: none; border-bottom: 2px solid transparent;
-  color: #777; font-family: inherit; font-size: 0.6rem;
-  letter-spacing: 0.06em; padding: 0.45rem 0.7rem; cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
+  color: #777; font-family: inherit; font-size: 0.58rem;
+  letter-spacing: 0.04em; padding: 0.4rem 0.2rem; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap; text-align: center;
 }
 .tab-btn:hover { color: var(--neon-dim); background: rgba(0,0,0,0.1); }
 .tab-btn.active { color: var(--neon); border-bottom-color: var(--neon); text-shadow: 0 0 8px var(--neon); }
@@ -298,7 +298,6 @@ body::after {
 .tool-install { margin-bottom: 0.2rem; }
 
 /* ── Tab bar (tools/services sub) ── */
-.tab-bar { display: flex; border-bottom: 1px solid #0d0d0d; background: rgba(8,8,8,0.97); flex-wrap: wrap; }
 
 /* ── Regex ── */
 .regex-row { display: grid; grid-template-columns: 200px 1fr; gap: 0.65rem; align-items: start; margin-bottom: 0.35rem; }
@@ -400,7 +399,7 @@ body::after {
   .target-bar { padding: 0.4rem 0.75rem; flex-wrap: wrap; gap: 0.4rem; }
   .target-input { width: 90px; }
 
-  .tab-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .tab-bar { grid-template-columns: repeat(6, 1fr); overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .tab-bar::-webkit-scrollbar { height: 2px; }
   .tab-btn { font-size: 0.6rem; padding: 0.45rem 0.65rem; }
 

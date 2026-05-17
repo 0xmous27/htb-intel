@@ -23,9 +23,9 @@ const TABS = [
   { id: 'hash',       label: '🔐 HASH ID', group: 'crack' },
   { id: 'wordlists',  label: '📦 WORDLISTS', group: 'crack' },
   { id: 'gtfo',       label: '🐚 GTFO', group: 'crack' },
-  { id: 'regex',      label: '🔍 REGEX', group: 'crack' },
   // ── TRACK ──
   { id: 'quickref',   label: '⚡ QUICK REF', group: 'track' },
+  { id: 'regex',      label: '🔍 REGEX', group: 'track' },
   { id: 'loot',       label: '🎯 LOOT', group: 'track' },
   { id: 'creds',      label: '🔑 CREDS', group: 'track' },
   { id: 'checklist',  label: '📋 CHECKLIST', group: 'track' },
@@ -37,16 +37,7 @@ const TABS = [
   { id: 'cpts',       label: '🎓 CPTS', group: 'learn' },
   // ── FUN ──
   { id: 'game',       label: '🎮 HACK GAME', group: 'fun' },
-  { id: 'runner',     label: '🏃 RUNNER', group: 'fun' },
 ]
-
-const GROUP_LABELS: Record<string, string> = {
-  attack: 'ATTACK',
-  crack: 'CRACK',
-  track: 'TRACK',
-  learn: 'LEARN',
-  fun: 'FUN',
-}
 
 interface Technique {
   id: string
@@ -102,31 +93,6 @@ function App() {
     return list
   }, [data, active, search])
 
-  // All tabs visible
-  const renderTabBtn = (t: typeof TABS[0], i: number, arr: typeof TABS) => {
-    const neon = getComputedStyle(document.documentElement).getPropertyValue('--neon').trim() || '#00ff99'
-    const globalIdx = TABS.findIndex(x => x.id === t.id)
-    const lit = tabSweep === globalIdx
-    const prevGroup = i > 0 ? arr[i - 1].group : t.group
-    const showDivider = i > 0 && t.group !== prevGroup
-    return (
-      <span key={t.id} style={{ display: 'contents' }}>
-        {showDivider && <span style={{ width: '1px', height: '16px', background: '#2a2a2a', margin: '0 4px', alignSelf: 'center' }} />}
-        <button
-          className={`tab-btn ${tab === t.id ? 'active' : ''}`}
-          onClick={() => setTab(t.id)}
-          style={lit ? {
-            color: neon,
-            borderBottomColor: neon,
-            background: `${neon}12`,
-            textShadow: `0 0 12px ${neon}, 0 0 24px ${neon}66`,
-            boxShadow: `0 0 10px ${neon}33`,
-          } : {}}
-        >{t.label}</button>
-      </span>
-    )
-  }
-
   return (
     <>
       <MatrixRain />
@@ -148,16 +114,27 @@ function App() {
           <Sidebar categories={categories} active={active} onSelect={(cat: string) => { setActive(cat); setTab('techniques') }} search={search} onSearch={setSearch} />
           <div className="main-content">
             <TargetBar />
-            {/* #2 — Group labels row */}
-            <div style={{ display: 'flex', gap: '0.5rem', padding: '0.3rem 0.75rem 0', fontSize: '0.45rem', letterSpacing: '0.15em', color: '#333' }}>
-              {Object.entries(GROUP_LABELS).map(([key, label]) => {
-                const isActive = TABS.find(t => t.id === tab)?.group === key
-                return <span key={key} style={{ color: isActive ? 'var(--neon)' : '#333', opacity: isActive ? 0.6 : 1 }}>{label}</span>
+            {/* Tab bar — 2 rows of 11 */}
+            <div className="tab-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', position: 'relative' }}>
+              {TABS.map((t, i) => {
+                const neon = getComputedStyle(document.documentElement).getPropertyValue('--neon').trim() || '#00ff99'
+                const globalIdx = i
+                const lit = tabSweep === globalIdx
+                return (
+                  <button
+                    key={t.id}
+                    className={`tab-btn ${tab === t.id ? 'active' : ''}`}
+                    onClick={() => setTab(t.id)}
+                    style={lit ? {
+                      color: neon,
+                      borderBottomColor: neon,
+                      background: `${neon}12`,
+                      textShadow: `0 0 12px ${neon}, 0 0 24px ${neon}66`,
+                      boxShadow: `0 0 10px ${neon}33`,
+                    } : {}}
+                  >{t.label}</button>
+                )
               })}
-            </div>
-            {/* Tab bar — all tabs visible */}
-            <div className="tab-bar" style={{ flexWrap: 'wrap', position: 'relative' }}>
-              {TABS.map((t, i, arr) => renderTabBtn(t, i, arr))}
             </div>
             <div className="content-area">
               <TabContent tab={tab} search={search} active={active} techniques={techniques} loading={loading} TABS={TABS} />

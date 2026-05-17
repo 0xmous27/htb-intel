@@ -13,7 +13,6 @@ const HashID = lazy(() => import('./HashID'))
 const WordlistsRef = lazy(() => import('./WordlistsRef'))
 const PortRef = lazy(() => import('./PortRef'))
 const HackGame = lazy(() => import('./HackGame'))
-const RunnerGame = lazy(() => import('./EscapeLogin'))
 const CPTSGuide = lazy(() => import('./CPTSGuide'))
 const GTFOBins = lazy(() => import('./GTFOBins'))
 const CVERef = lazy(() => import('./CVERef'))
@@ -73,7 +72,6 @@ export default function TabContent({ tab, search, active, techniques, loading, T
       {tab === 'ad'        && <ADTab />}
       {tab === 'quickref'  && <QuickRef />}
       {tab === 'game'      && <HackGame />}
-      {tab === 'runner'    && <RunnerGame />}
     </Suspense>
   )
 }
