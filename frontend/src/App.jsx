@@ -54,30 +54,6 @@ const TABS = [
   { id: 'runner',     label: '😂 CATCH ME' },
 ]
 
-// Tab → component map (search-aware tabs receive search prop)
-const TAB_COMPONENTS = {
-  tools: (s) => <ToolsView search={s} />,
-  services: (s) => <ServicesView search={s} />,
-  oob: (s) => <OOBView search={s} />,
-  regex: (s) => <RegexView search={s} />,
-  payload: () => <PayloadGen />,
-  hash: () => <HashID />,
-  ports: () => <PortRef />,
-  wordlists: () => <WordlistsRef />,
-  gtfo: () => <GTFOBins />,
-  cve: () => <CVERef />,
-  loot: () => <LootTracker />,
-  creds: () => <CredsVault />,
-  checklist: () => <ChecklistTab />,
-  notes: () => <NotesTab />,
-  cpts: () => <CPTSGuide />,
-  forge: () => <TemplateForge />,
-  tricks: () => <TricksTab />,
-  bugbounty: () => <BugBountyTab />,
-  game: () => <HackGame />,
-  runner: () => <RunnerGame />,
-}
-
 function App() {
   const [data, setData] = useState([])
   const [active, setActive] = useState(null)
@@ -178,7 +154,26 @@ function App() {
                   {techniques.map(t => <TechniqueCard key={t.id} technique={t} />)}
                 </>
               )}
-              {tab !== 'techniques' && <div key={tab}>{TAB_COMPONENTS[tab]?.(search)}</div>}
+              {tab === 'tools'     && <ToolsView search={search} />}
+              {tab === 'services'  && <ServicesView search={search} />}
+              {tab === 'oob'       && <OOBView search={search} />}
+              {tab === 'regex'     && <RegexView search={search} />}
+              {tab === 'payload'   && <PayloadGen />}
+              {tab === 'hash'      && <HashID />}
+              {tab === 'ports'     && <PortRef />}
+              {tab === 'wordlists' && <WordlistsRef />}
+              {tab === 'gtfo'      && <GTFOBins />}
+              {tab === 'cve'       && <CVERef />}
+              {tab === 'loot'      && <LootTracker />}
+              {tab === 'creds'     && <CredsVault />}
+              {tab === 'checklist' && <ChecklistTab />}
+              {tab === 'notes'     && <NotesTab />}
+              {tab === 'cpts'      && <CPTSGuide />}
+              {tab === 'forge'     && <TemplateForge />}
+              {tab === 'tricks'    && <TricksTab />}
+              {tab === 'bugbounty' && <BugBountyTab />}
+              {tab === 'game'      && <HackGame />}
+              {tab === 'runner'    && <RunnerGame />}
               </Suspense>
             </div>
           </div>
