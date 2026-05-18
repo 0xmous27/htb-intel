@@ -50,16 +50,12 @@ export default function TechniqueCard({ technique }: { technique: Technique }) {
 
       {open && (
         <div className="card-body">
-          <div className="card-meta">
-            <div>
-              <div className="meta-label">PURPOSE</div>
-              <div className="meta-value">{technique.purpose}</div>
+          {(technique.purpose || technique.when_to_use) && (
+            <div className="card-meta">
+              {technique.purpose && <div><div className="meta-label">PURPOSE</div><div className="meta-value">{technique.purpose}</div></div>}
+              {technique.when_to_use && <div><div className="meta-label">WHEN TO USE</div><div className="meta-value">{technique.when_to_use}</div></div>}
             </div>
-            <div>
-              <div className="meta-label">WHEN TO USE</div>
-              <div className="meta-value">{technique.when_to_use}</div>
-            </div>
-          </div>
+          )}
           <div className="cmd-block" style={evasion ? { borderLeftColor: '#ff9900' } : {}}>
             {technique.command.includes('\n')
               ? technique.command.split('\n').map((line, i) => (

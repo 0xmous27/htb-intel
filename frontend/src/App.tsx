@@ -94,14 +94,20 @@ function App() {
   useEffect(() => {
     // Fetch techniques from Supabase, fall back to static JSON
     supabase.from('techniques').select('*').order('created_at', { ascending: false })
-      .then(({ data: rows, error }) => {
+      .then(async ({ data: rows, error }) => {
         if (!error && rows && rows.length > 0) {
-          // Group flat rows into {category, techniques:[...]}
+          // Load static data to fill missing purpose/when_to_use
+          const staticMod = await import('./data/techniques.json')
+          const staticMap = new Map<string, Technique>()
+          for (const cat of staticMod.default) {
+            for (const t of cat.techniques) staticMap.set(t.id, t)
+          }
           const grouped: Record<string, Technique[]> = {}
           for (const r of rows) {
             const cat = r.category || 'Misc'
             if (!grouped[cat]) grouped[cat] = []
-            grouped[cat].push({ id: r.id, name: r.name, command: r.command, purpose: r.purpose, when_to_use: r.when_to_use, tags: r.tags || [] })
+            const fallback = staticMap.get(r.id)
+            grouped[cat].push({ id: r.id, name: r.name, command: r.command, purpose: r.purpose || fallback?.purpose, when_to_use: r.when_to_use || fallback?.when_to_use, tags: r.tags || [] })
           }
           setData(Object.entries(grouped).map(([category, techniques]) => ({ category, techniques })))
           setLoading(false)
