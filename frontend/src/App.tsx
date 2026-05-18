@@ -92,11 +92,14 @@ function App() {
   }, [])
 
   useEffect(() => {
-    // Fetch techniques from Supabase, fall back to static JSON
+    let done = false
+    const timeout = setTimeout(() => {
+      if (!done) { done = true; import('./data/techniques.json').then(m => { setData(m.default); setLoading(false) }) }
+    }, 5000)
     supabase.from('techniques').select('*').order('created_at', { ascending: false })
       .then(async ({ data: rows, error }) => {
+        if (done) return
         if (!error && rows && rows.length > 0) {
-          // Load static data to fill missing purpose/when_to_use
           const staticMod = await import('./data/techniques.json')
           const staticMap = new Map<string, Technique>()
           for (const cat of staticMod.default) {
@@ -109,12 +112,15 @@ function App() {
             const fallback = staticMap.get(r.id)
             grouped[cat].push({ id: r.id, name: r.name, command: r.command, purpose: r.purpose || fallback?.purpose, when_to_use: r.when_to_use || fallback?.when_to_use, tags: r.tags || [] })
           }
+          done = true; clearTimeout(timeout)
           setData(Object.entries(grouped).map(([category, techniques]) => ({ category, techniques })))
           setLoading(false)
         } else {
+          done = true; clearTimeout(timeout)
           import('./data/techniques.json').then(m => { setData(m.default); setLoading(false) })
         }
       })
+    return () => { done = true; clearTimeout(timeout) }
   }, [])
 
   const categories = useMemo(() => data.map(c => ({ category: c.category, count: c.techniques.length })), [data])

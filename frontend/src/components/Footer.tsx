@@ -49,9 +49,16 @@ export default function Footer() {
   }, [])
 
   useEffect(() => {
-    supabase.rpc('increment_visits').then(({ data }) => {
-      if (data) setVisitors(Number(data))
-    })
+    if (!sessionStorage.getItem('htb-visited')) {
+      sessionStorage.setItem('htb-visited', '1')
+      supabase.rpc('increment_visits').then(({ data }) => {
+        if (data) setVisitors(Number(data))
+      })
+    } else {
+      supabase.from('site_stats').select('visits').single().then(({ data }) => {
+        if (data) setVisitors(data.visits)
+      })
+    }
     const stored = localStorage.getItem('htb-intel-name')
     if (stored) {
       setTimeout(() => {
